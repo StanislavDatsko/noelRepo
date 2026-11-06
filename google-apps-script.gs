@@ -3,7 +3,7 @@
  *
  * Setup (once):
  * 1. Create a Google Sheet, then Extensions → Apps Script, paste this file.
- * 2. Project Settings → Script properties → add SECRET = <long random string>
+ * 2. Project Settings → Script properties → add ORDER_WEBHOOK_SECRET = <long random string>
  *    (same value as GOOGLE_SHEETS_WEBHOOK_SECRET in .env.local / Vercel).
  * 3. Deploy → New deployment → type "Web app", Execute as: Me, Who has access: Anyone.
  * 4. Copy the Web app URL into GOOGLE_SHEETS_WEBHOOK_URL.
@@ -15,7 +15,8 @@ const HEADERS = ['Дата', 'Ім’я', 'Телефон', 'utm_source', 'utm_c
 function doPost(e) {
   try {
     const data = JSON.parse(e.postData.contents);
-    const secret = PropertiesService.getScriptProperties().getProperty('SECRET');
+    const props = PropertiesService.getScriptProperties();
+    const secret = props.getProperty('ORDER_WEBHOOK_SECRET') || props.getProperty('SECRET');
     if (!secret || data.secret !== secret) return json({ ok: false, error: 'forbidden' });
 
     const book = SpreadsheetApp.getActiveSpreadsheet();
