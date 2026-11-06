@@ -54,20 +54,19 @@ function renderScroll(){
       storyFacts.forEach(fact=>fact.classList.add('active'));
     }else{
     const value=clamp((y-layout.headlineStart)/Math.max(1,layout.storyEnd-layout.headlineStart));
-    const intro=phase(value,0,.24),accent=phase(value,.12,.38),description=phase(value,.26,.5);
-    const photo=phase(value,.5,.88),outro=phase(value,.88,1);
+    const intro=phase(value,0,.26),accent=phase(value,.12,.42),photo=phase(value,.38,.7),description=phase(value,.7,.86),outro=phase(value,.9,1);
     if(storyChapter){storyChapter.style.opacity=String(intro);storyChapter.style.transform=`translate3d(0,${(1-intro)*16}px,0)`}
     if(storyLineOne){storyLineOne.style.opacity=String(intro);storyLineOne.style.transform=`translate3d(0,${(1-intro)*108}%,0)`}
     if(storyLineTwo){storyLineTwo.style.opacity=String(accent);storyLineTwo.style.transform=`translate3d(0,${(1-accent)*108}%,0) scale(${.94+accent*.06})`}
     if(productIntro){productIntro.style.opacity=String(description);productIntro.style.transform=`translate3d(0,${(1-description)*20}px,0)`}
-    const inset=13*(1-photo);
-    productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
+    productMask.style.clipPath='inset(0 round 10px)';
     productMask.style.opacity=String(photo);
-    productMask.style.transform=`translate3d(0,${(1-photo)*28-outro*14}px,0) scale(${.97+photo*.03-outro*.012})`;
+    productMask.style.transform=`translate3d(0,${(1-photo)*14-outro*6}px,0)`;
     productSection.style.setProperty('--story-light',String(photo*(1-outro*.35)));
-    productImage.style.transform=`scale(${1.12-photo*.12})`;
+    productImage.style.transform='scale(1.01)';
     if(productShade)productShade.style.opacity=String(.48-photo*.26);
-    const active=photo<.06?-1:Math.min(2,Math.floor(photo*3));
+    const factsProgress=phase(value,.76,.98);
+    const active=factsProgress<.08?-1:Math.min(2,Math.floor(factsProgress*3));
     storyFacts.forEach((fact,index)=>fact.classList.toggle('active',index===active));
     }
   }
@@ -118,15 +117,15 @@ if(!reduced){
   if(canvas&&ctx){
     let width=0,height=0,dpr=1,flakes=[],frame=0,lastPaint=0,running=false,resizeFrame=0;
     const isMobile=()=>innerWidth<700;
-    const flakeCount=()=>isMobile()?18:30;
+    const flakeCount=()=>isMobile()?12:20;
     const crystalPath=new Path2D();
     for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,x=Math.cos(angle),y=Math.sin(angle);crystalPath.moveTo(0,0);crystalPath.lineTo(x*1.45,y*1.45);for(const side of [-1,1]){const branch=angle+side*.58;crystalPath.moveTo(x*.86,y*.86);crystalPath.lineTo(x*.86+Math.cos(branch)*.36,y*.86+Math.sin(branch)*.36)}}
-    function resetFlake(f,initial=false){const depth=.45+Math.random()*.65;f.x=Math.random()*width;f.y=initial?Math.random()*height:-14;f.size=(1.1+Math.random()*2.8)*depth;f.speed=(22+Math.random()*34)*depth;f.wind=(Math.random()-.5)*7;f.phase=Math.random()*Math.PI*2;f.angle=Math.random()*Math.PI;f.spin=(Math.random()-.5)*.5;f.alpha=(.28+Math.random()*.42)*depth;f.crystal=Math.random()>.78;return f}
+    function resetFlake(f,initial=false){const depth=.45+Math.random()*.65;f.x=Math.random()*width;f.y=initial?Math.random()*height:-18;f.size=(1.8+Math.random()*3.6)*depth;f.speed=(18+Math.random()*28)*depth;f.wind=(Math.random()-.5)*6;f.phase=Math.random()*Math.PI*2;f.angle=Math.random()*Math.PI;f.spin=(Math.random()-.35)*.35;f.alpha=(.3+Math.random()*.38)*depth;f.crystal=Math.random()>.9;return f}
     function setupSnow(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.25);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>resetFlake({},true));drawSnow(0)}
     function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.size,f.size);ctx.globalAlpha=f.alpha;ctx.lineWidth=.48/f.size;ctx.stroke(crystalPath);ctx.restore()}
     function drawSnow(delta){ctx.clearRect(0,0,width,height);ctx.fillStyle='#f7fbff';ctx.strokeStyle='#f7fbff';for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)resetFlake(f);if(f.crystal)drawCrystal(f);else{ctx.globalAlpha=f.alpha;const size=Math.max(1,f.size*.55);ctx.fillRect(f.x,f.y,size,size)}}ctx.globalAlpha=1}
-    function animateSnow(time){if(!running)return;frame=requestAnimationFrame(animateSnow);if(time-lastPaint<33)return;const delta=Math.min(.05,(time-lastPaint||33)/1000);lastPaint=time;drawSnow(delta)}
-    function startSnow(){if(running||document.hidden)return;running=true;lastPaint=performance.now()-34;frame=requestAnimationFrame(animateSnow)}
+    function animateSnow(time){if(!running)return;frame=requestAnimationFrame(animateSnow);const delta=Math.min(.03,(time-lastPaint||16)/1000);lastPaint=time;drawSnow(delta)}
+    function startSnow(){if(running||document.hidden)return;running=true;lastPaint=performance.now()-16;frame=requestAnimationFrame(animateSnow)}
     function stopSnow(){running=false;cancelAnimationFrame(frame)}
     setupSnow();afterFirstPaint(startSnow);
     addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(setupSnow)},{passive:true});
@@ -159,11 +158,15 @@ vinyls.forEach(vinyl=>vinyl.addEventListener('click',()=>{
 
 // Decorative gift opening
 const giftBox=$('.gift-box'),giftMessage=$('.gift-message');
-giftBox?.addEventListener('click',()=>{const open=giftBox.classList.toggle('open');giftBox.setAttribute('aria-expanded',String(open));giftMessage.classList.toggle('visible',open);$('small',giftBox).textContent=open?'Ваш особливий момент':'Натисніть, щоб відкрити'});
+const toggleGift=()=>{if(!giftBox)return;const open=giftBox.classList.toggle('open');giftBox.setAttribute('aria-expanded',String(open));giftMessage.classList.toggle('visible',open);$('small',giftBox).textContent=open?'Ваш особливий момент':'Натисніть, щоб відкрити'};
+let giftPointerHandled=false;
+giftBox?.addEventListener('pointerup',event=>{if(event.pointerType==='mouse')return;event.preventDefault();giftPointerHandled=true;toggleGift();setTimeout(()=>{giftPointerHandled=false},0)});
+giftBox?.addEventListener('click',event=>{if(giftPointerHandled)return;if(event.detail===0||event.pointerType==='mouse'||event.detail>0)toggleGift()});
 
 // Infinite one-slide gallery with buttons and touch gestures
 const galleryTrack=$('.gallery-track');
 if(galleryTrack){
+  const galleryViewport=$('.gallery-viewport');
   const originalSlides=$$('figure',galleryTrack),total=originalSlides.length;
   const first=originalSlides[0].cloneNode(true),last=originalSlides[total-1].cloneNode(true);
   first.setAttribute('aria-hidden','true');last.setAttribute('aria-hidden','true');galleryTrack.prepend(last);galleryTrack.append(first);
@@ -176,10 +179,11 @@ if(galleryTrack){
   galleryTrack.addEventListener('transitionend',normalize);
   $('[data-gallery-prev]')?.addEventListener('click',()=>{if(index<=0)return;index--;move()});
   $('[data-gallery-next]')?.addEventListener('click',()=>{if(index>=total+1)return;index++;move()});
-  galleryTrack.addEventListener('pointerdown',event=>{dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryTrack.setPointerCapture(event.pointerId);galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
-  galleryTrack.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;moved=moved||Math.abs(currentX-startX)>6;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
-  galleryTrack.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index+=delta<0?1:-1;move()});
-  galleryTrack.addEventListener('pointercancel',()=>{dragging=false;move()});
+  const finishDrag=()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index+=delta<0?1:-1;move()};
+  galleryViewport?.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryViewport.setPointerCapture?.(event.pointerId);galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
+  galleryViewport?.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;moved=moved||Math.abs(currentX-startX)>6;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
+  galleryViewport?.addEventListener('pointerup',finishDrag);
+  galleryViewport?.addEventListener('pointercancel',()=>{dragging=false;move()});
   const lightbox=$('.photo-lightbox'),lightboxImage=$('.photo-lightbox img'),lightboxCaption=$('.photo-lightbox figcaption');
   let lightboxIndex=0;
   function showLightbox(nextIndex){
@@ -206,13 +210,12 @@ if(galleryTrack){
 if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!reduced){$$('.magnetic').forEach(button=>{button.addEventListener('pointermove',event=>{const rect=button.getBoundingClientRect(),x=(event.clientX-rect.left-rect.width/2)*.12,y=(event.clientY-rect.top-rect.height/2)*.18;button.style.transform=`translate(${x}px,${y}px)`});button.addEventListener('pointerleave',()=>button.style.transform='')})}
 
 // Order form and traffic attribution
-const phone=$('input[name=phone]');
-phone?.addEventListener('input',event=>{let value=event.target.value.replace(/\D/g,'');if(value.startsWith('380'))value=value.slice(0,12);else if(value.startsWith('0'))value=`38${value.slice(0,10)}`;else value=`380${value.slice(0,9)}`;event.target.value=`+${value}`});
+$$('input[name=phone]').forEach(phone=>phone.addEventListener('input',event=>{let value=event.target.value.replace(/\D/g,'');if(value.startsWith('380'))value=value.slice(0,12);else if(value.startsWith('0'))value=`38${value.slice(0,10)}`;else value=`380${value.slice(0,9)}`;event.target.value=`+${value}`}));
 function trafficData(){const params=new URLSearchParams(location.search),keys=['utm_source','utm_medium','utm_campaign','utm_term','utm_content','gclid','fbclid','ttclid'];return Object.fromEntries(keys.filter(key=>params.get(key)).map(key=>[key,params.get(key)]))}
-$('#order-form')?.addEventListener('submit',async event=>{
+$$('.order-form').forEach(orderForm=>orderForm.addEventListener('submit',async event=>{
   event.preventDefault();const form=event.currentTarget,button=$('button[type=submit]',form),status=$('.form-status',form),data=Object.fromEntries(new FormData(form));
   if(data.name.trim().length<2||!/^\+380\d{9}$/.test(data.phone)||!data.consent){status.textContent='Перевірте ім’я, номер у форматі +380 та згоду на обробку даних.';status.className='form-status error';return}
   button.disabled=true;button.innerHTML='Надсилаємо…';status.textContent='';status.className='form-status';Object.assign(data,{product:window.STORE_CONFIG?.product||'Різдвяний магнітний мініпрогравач',price:window.STORE_CONFIG?.currencyPrice||'1422.98',traffic:trafficData()});
   try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';form.reset();window.dataLayer?.push({event:'Lead'})}
   catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>→</span>'}
-});
+}));
