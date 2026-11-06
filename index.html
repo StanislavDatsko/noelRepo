@@ -9,6 +9,8 @@
   <meta property="og:description" content="9 платівок. Ваші пісні. Один особливий різдвяний подарунок.">
   <meta property="og:image" content="img_and_video/photo1.avif">
   <title>NOËL — музичний подарунок на Різдво</title>
+  <link rel="icon" href="data:,">
+  <link rel="preload" as="image" href="img_and_video/photo1.avif" type="image/avif">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
@@ -36,7 +38,7 @@
 
     <div class="hero-product hero-in" data-parallax="0.08">
       <div class="hero-product-frame">
-        <img src="img_and_video/photo1.avif" alt="Різдвяний магнітний музичний мініпрогравач із дев’ятьма платівками" fetchpriority="high">
+        <img src="img_and_video/photo1.avif" alt="Різдвяний магнітний музичний мініпрогравач із дев’ятьма платівками" width="1001" height="1001" fetchpriority="high" decoding="async">
       </div>
       <p><span>01</span> Magnetic music player</p>
     </div>
@@ -72,12 +74,16 @@
 
     <section class="product-story dark-section" id="product">
       <div class="product-sticky">
-        <div class="product-copy shell">
-          <p class="chapter reveal"><span>03</span> Discover the object</p>
-          <h2 class="reveal">Маленький об’єкт.<br><em>Велика історія.</em></h2>
+        <div class="product-copy shell" data-cinematic-copy>
+          <p class="chapter"><span>03</span> Discover the object</p>
+          <h2 aria-label="Маленький об’єкт. Велика історія.">
+            <span class="story-line story-line-one"><i>Маленький об’єкт.</i></span>
+            <span class="story-line story-line-two"><i>Велика історія.</i></span>
+          </h2>
+          <p class="product-intro">Дев’ять платівок перетворюють маленький програвач на особистий архів музики, голосів і зимових моментів.</p>
         </div>
         <div class="product-mask" data-product-reveal>
-          <img src="img_and_video/photo3.avif" alt="Музичний мініпрогравач крупним планом" loading="lazy">
+          <img src="img_and_video/photo3.avif" alt="Музичний мініпрогравач крупним планом" width="1001" height="1001" loading="lazy" decoding="async">
           <div class="product-shade"></div>
           <span class="product-index">01 / 09</span>
         </div>
@@ -137,6 +143,32 @@
       </div>
     </section>
 
+    <section class="photo-essay light-section" id="photo-story">
+      <div class="shell photo-essay-heading reveal">
+        <p class="chapter"><span>05½</span> The object in life</p>
+        <h2>Побачте його<br><em>у вашому Різдві.</em></h2>
+        <p>Від першого дотику до платівки — до музики, що залишається поруч щодня.</p>
+      </div>
+      <figure class="immersive-photo" data-photo-reveal>
+        <img src="img_and_video/photo2.avif" alt="Програвач і дев’ять різдвяних NFC-платівок в інтер’єрі" width="1001" height="1001" loading="lazy" decoding="async">
+        <figcaption><span>01</span><strong>Уся колекція.</strong> Дев’ять окремих музичних моментів.</figcaption>
+      </figure>
+      <div class="photo-mosaic shell" aria-label="Програвач у деталях">
+        <figure class="mosaic-main reveal" data-photo-depth="0.045">
+          <img src="img_and_video/photo5.avif" alt="Дотик NFC-платівкою до програвача" width="1001" height="1001" loading="lazy" decoding="async">
+          <figcaption>Дотик, що запускає вашу музику.</figcaption>
+        </figure>
+        <figure class="mosaic-detail reveal" data-photo-depth="0.025">
+          <img src="img_and_video/photo4.avif" alt="Магнітний програвач на металевій поверхні" width="1001" height="1001" loading="lazy" decoding="async">
+          <figcaption>Магнітний формат — завжди поруч.</figcaption>
+        </figure>
+        <figure class="mosaic-kit reveal" data-photo-depth="0.035">
+          <img src="img_and_video/photo6.avif" alt="Програвач та комплект різдвяних платівок" width="1001" height="1001" loading="lazy" decoding="async">
+          <figcaption>Програвач і дев’ять NFC-платівок.</figcaption>
+        </figure>
+      </div>
+    </section>
+
     <section class="details light-section" id="details">
       <div class="shell reveal">
         <p class="chapter"><span>06</span> Little details</p>
@@ -144,7 +176,7 @@
       </div>
       <div class="details-layout">
         <figure class="detail-main reveal">
-          <img src="img_and_video/photo_product_user_guide.avif" alt="Комплектація мініпрогравача" loading="lazy">
+          <img src="img_and_video/photo_product_user_guide.avif" alt="Комплектація мініпрогравача" width="1001" height="1001" loading="lazy" decoding="async">
           <figcaption>Повний комплект</figcaption>
         </figure>
         <div class="detail-list shell">
@@ -171,7 +203,7 @@
         <span class="gift-lid"><i></i></span>
         <span class="gift-body"><i></i></span>
         <span class="gift-glow"></span>
-        <img src="img_and_video/photo1.avif" alt="Музичний програвач як різдвяний подарунок" loading="lazy">
+        <img src="img_and_video/photo1.avif" alt="Музичний програвач як різдвяний подарунок" width="1001" height="1001" loading="lazy" decoding="async">
         <small>Натисніть, щоб відкрити</small>
       </button>
       <div class="gift-message" aria-live="polite"><strong>Даруйте не просто музику.</strong><span>Даруйте момент, до якого хочеться повертатися.</span></div>
@@ -184,16 +216,16 @@
       </div>
       <div class="gallery-viewport reveal">
         <div class="gallery-track">
-          <figure><img src="img_and_video/photo2.avif" alt="Набір NFC-платівок" loading="lazy"><figcaption>01 / Дев’ять платівок</figcaption></figure>
-          <figure><img src="img_and_video/photo4.avif" alt="Ретродизайн програвача" loading="lazy"><figcaption>02 / Ретродеталі</figcaption></figure>
-          <figure><img src="img_and_video/photo5.avif" alt="Магнітний програвач у просторі" loading="lazy"><figcaption>03 / Магнітний формат</figcaption></figure>
-          <figure><img src="img_and_video/photo6.avif" alt="Деталі підсвічування" loading="lazy"><figcaption>04 / Тепле світло</figcaption></figure>
-          <figure><img src="img_and_video/photo_product_user_guide.avif" alt="Інструкція до програвача" loading="lazy"><figcaption>05 / Простий старт</figcaption></figure>
-          <figure><img src="img_and_video/photo3.avif" alt="Різдвяний програвач крупним планом" loading="lazy"><figcaption>06 / Різдвяний об’єкт</figcaption></figure>
+          <figure><img src="img_and_video/photo2.avif" alt="Набір NFC-платівок" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>01 / Дев’ять платівок</figcaption></figure>
+          <figure><img src="img_and_video/photo4.avif" alt="Ретродизайн програвача" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>02 / Ретродеталі</figcaption></figure>
+          <figure><img src="img_and_video/photo5.avif" alt="Магнітний програвач у просторі" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>03 / Магнітний формат</figcaption></figure>
+          <figure><img src="img_and_video/photo6.avif" alt="Деталі підсвічування" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>04 / Тепле світло</figcaption></figure>
+          <figure><img src="img_and_video/photo_product_user_guide.avif" alt="Інструкція до програвача" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>05 / Простий старт</figcaption></figure>
+          <figure><img src="img_and_video/photo3.avif" alt="Різдвяний програвач крупним планом" width="1001" height="1001" loading="lazy" decoding="async"><figcaption>06 / Різдвяний об’єкт</figcaption></figure>
         </div>
         <div class="gallery-controls">
           <button type="button" data-gallery-prev aria-label="Попереднє фото">←</button>
-          <span><i data-gallery-current>01</i> / 04</span>
+          <span><i data-gallery-current>01</i> / <b data-gallery-total>06</b></span>
           <button type="button" data-gallery-next aria-label="Наступне фото">→</button>
         </div>
       </div>
@@ -251,6 +283,13 @@
       </div>
     </section>
   </main>
+
+  <dialog class="photo-lightbox" aria-label="Повноекранний перегляд фотографій">
+    <button class="lightbox-close" type="button" aria-label="Закрити перегляд">×</button>
+    <button class="lightbox-prev" type="button" aria-label="Попереднє фото">←</button>
+    <figure><img alt=""><figcaption></figcaption></figure>
+    <button class="lightbox-next" type="button" aria-label="Наступне фото">→</button>
+  </dialog>
 
   <aside class="sticky-buy" aria-label="Швидке замовлення">
     <span><small><del>1 822,98 грн</del><em>−22%</em></small><b>1 422,98 грн</b></span>

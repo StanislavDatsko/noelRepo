@@ -1,6 +1,7 @@
 const $=(selector,context=document)=>context.querySelector(selector);
 const $$=(selector,context=document)=>[...context.querySelectorAll(selector)];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+document.documentElement.classList.add('js');
 
 // Editorial reveals
 const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
@@ -15,29 +16,62 @@ const productSection=$('.product-story');
 const productMask=$('[data-product-reveal]');
 const productImage=$('[data-product-reveal] img');
 const storyFacts=$$('[data-story]');
+const storyChapter=$('.product-copy .chapter');
+const storyLineOne=$('.story-line-one i');
+const storyLineTwo=$('.story-line-two i');
+const productIntro=$('.product-intro');
+const immersivePhoto=$('[data-photo-reveal]');
+const depthPhotos=$$('[data-photo-depth]');
+const clamp=value=>Math.min(1,Math.max(0,value));
+const ease=value=>1-Math.pow(1-clamp(value),3);
+const phase=(value,start,end)=>ease((value-start)/(end-start));
 let ticking=false;
 function renderScroll(){
   const max=Math.max(1,document.documentElement.scrollHeight-innerHeight);
   progressBar.style.transform=`scaleX(${scrollY/max})`;
   if(!reduced&&heroProduct&&scrollY<innerHeight*1.2){if(scrollY>4)heroProduct.style.transform=`translate3d(0,${scrollY*.045}px,0) scale(${1+scrollY*.000035})`;else heroProduct.style.removeProperty('transform')}
   if(productSection&&productMask){
+    if(reduced){
+      [storyChapter,storyLineOne,storyLineTwo,productIntro,productMask,productImage].forEach(element=>{element?.style.removeProperty('opacity');element?.style.removeProperty('transform');element?.style.removeProperty('filter');element?.style.removeProperty('clip-path')});
+      productSection.style.setProperty('--story-light','.55');
+      storyFacts.forEach(fact=>fact.classList.add('active'));
+    }else{
     const travel=Math.max(1,productSection.offsetHeight-innerHeight);
-    // Start only after the third section becomes sticky and its headline is
-    // fully visible. Starting at a viewport-entry threshold was too early.
-    const startDelay=Math.min(64,innerHeight*.08);
-    const headlineStart=productSection.offsetTop+startDelay;
-    const animationTravel=Math.max(1,travel-startDelay);
-    const value=Math.min(1,Math.max(0,(scrollY-headlineStart)/animationTravel));
-    const inset=13*(1-value);
+    const copy=$('[data-cinematic-copy]',productSection);
+    const sectionTop=productSection.getBoundingClientRect().top+scrollY;
+    const headlineStart=sectionTop+(copy?.offsetTop||64)-innerHeight*.7;
+    const storyEnd=sectionTop+travel;
+    const value=clamp((scrollY-headlineStart)/Math.max(1,storyEnd-headlineStart));
+    const intro=phase(value,0,.18),accent=phase(value,.1,.31),description=phase(value,.2,.38);
+    const photo=phase(value,.42,.8),outro=phase(value,.82,1);
+    if(storyChapter){storyChapter.style.opacity=String(intro);storyChapter.style.transform=`translate3d(0,${(1-intro)*16}px,0)`}
+    if(storyLineOne){storyLineOne.style.opacity=String(intro);storyLineOne.style.transform=`translate3d(0,${(1-intro)*108}%,0)`}
+    if(storyLineTwo){storyLineTwo.style.opacity=String(accent);storyLineTwo.style.transform=`translate3d(0,${(1-accent)*108}%,0) scale(${.94+accent*.06})`}
+    if(productIntro){productIntro.style.opacity=String(description);productIntro.style.transform=`translate3d(0,${(1-description)*20}px,0)`}
+    const inset=13*(1-photo);
     productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
-    if(!reduced)productImage.style.transform=`scale(${1.12-value*.12})`;
-    const active=Math.min(2,Math.floor(value*3));
+    productMask.style.opacity=String(photo);
+    productMask.style.transform=`translate3d(0,${(1-photo)*28-outro*14}px,0) scale(${.97+photo*.03-outro*.012})`;
+    productSection.style.setProperty('--story-light',String(photo*(1-outro*.35)));
+    productImage.style.transform=`scale(${1.12-photo*.12})`;productImage.style.filter=`brightness(${.82+photo*.18})`;
+    const active=photo<.06?-1:Math.min(2,Math.floor(photo*3));
     storyFacts.forEach((fact,index)=>fact.classList.toggle('active',index===active));
+    }
   }
+  if(immersivePhoto){
+    const rect=immersivePhoto.getBoundingClientRect();
+    const photoProgress=clamp((innerHeight*.86-rect.top)/(innerHeight*.72));
+    if(!reduced)immersivePhoto.style.clipPath=`inset(0 ${9*(1-photoProgress)}% round ${8+photoProgress*10}px)`;
+    const image=$('img',immersivePhoto);if(image&&!reduced)image.style.transform=`scale(${1.1-photoProgress*.1})`;
+  }
+  if(!reduced)depthPhotos.forEach(figure=>{const rect=figure.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight)return;const depth=Number(figure.dataset.photoDepth)||0;const image=$('img',figure);if(image)image.style.transform=`translate3d(0,${(innerHeight/2-(rect.top+rect.height/2))*depth}px,0) scale(1.06)`});
   ticking=false;
 }
 addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(renderScroll);ticking=true}},{passive:true});
-addEventListener('resize',renderScroll,{passive:true});renderScroll();
+addEventListener('resize',renderScroll,{passive:true});
+addEventListener('load',renderScroll,{once:true});
+addEventListener('pageshow',renderScroll,{passive:true});
+renderScroll();
 
 // Lightweight snow: capped pixel ratio, 30 FPS, fewer particles and no
 // expensive canvas filters. It starts on the first paint and pauses in a
@@ -82,18 +116,38 @@ if(galleryTrack){
   const originalSlides=$$('figure',galleryTrack),total=originalSlides.length;
   const first=originalSlides[0].cloneNode(true),last=originalSlides[total-1].cloneNode(true);
   first.setAttribute('aria-hidden','true');last.setAttribute('aria-hidden','true');galleryTrack.prepend(last);galleryTrack.append(first);
-  let index=1,startX=0,currentX=0,dragging=false;
+  let index=1,startX=0,currentX=0,dragging=false,moved=false;
   const counter=$('[data-gallery-current]');
+  const totalLabel=$('[data-gallery-total]');if(totalLabel)totalLabel.textContent=String(total).padStart(2,'0');
   function updateCounter(){counter.textContent=String(index===0?total:index===total+1?1:index).padStart(2,'0')}
   function move(animate=true){galleryTrack.style.transition=animate?'transform .65s var(--ease)':'none';galleryTrack.style.transform=`translate3d(-${index*100}%,0,0)`;updateCounter()}
   function normalize(){if(index===0){index=total;move(false)}else if(index===total+1){index=1;move(false)}}
   galleryTrack.addEventListener('transitionend',normalize);
   $('[data-gallery-prev]')?.addEventListener('click',()=>{if(index<=0)return;index--;move()});
   $('[data-gallery-next]')?.addEventListener('click',()=>{if(index>=total+1)return;index++;move()});
-  galleryTrack.addEventListener('pointerdown',event=>{dragging=true;startX=event.clientX;currentX=startX;galleryTrack.setPointerCapture(event.pointerId);galleryTrack.style.transition='none'});
-  galleryTrack.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;const width=galleryTrack.clientWidth;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
+  galleryTrack.addEventListener('pointerdown',event=>{dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryTrack.setPointerCapture(event.pointerId);galleryTrack.style.transition='none'});
+  galleryTrack.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;moved=moved||Math.abs(currentX-startX)>6;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
   galleryTrack.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index+=delta<0?1:-1;move()});
   galleryTrack.addEventListener('pointercancel',()=>{dragging=false;move()});
+  const lightbox=$('.photo-lightbox'),lightboxImage=$('.photo-lightbox img'),lightboxCaption=$('.photo-lightbox figcaption');
+  let lightboxIndex=0;
+  function showLightbox(nextIndex){
+    if(!lightbox||!lightboxImage)return;
+    lightboxIndex=(nextIndex+total)%total;
+    const slide=originalSlides[lightboxIndex],image=$('img',slide);
+    lightboxImage.src=image.currentSrc||image.src;lightboxImage.alt=image.alt;
+    lightboxCaption.textContent=$('figcaption',slide)?.textContent||'';
+    if(!lightbox.open)lightbox.showModal();
+  }
+  galleryTrack.addEventListener('click',event=>{if(moved||!event.target.matches('img'))return;const source=event.target.getAttribute('src');const selected=originalSlides.findIndex(slide=>$('img',slide)?.getAttribute('src')===source);showLightbox(selected<0?0:selected)});
+  $('.lightbox-close')?.addEventListener('click',()=>lightbox?.close());
+  $('.lightbox-prev')?.addEventListener('click',()=>showLightbox(lightboxIndex-1));
+  $('.lightbox-next')?.addEventListener('click',()=>showLightbox(lightboxIndex+1));
+  lightbox?.addEventListener('click',event=>{if(event.target===lightbox)lightbox.close()});
+  lightbox?.addEventListener('keydown',event=>{if(event.key==='ArrowLeft')showLightbox(lightboxIndex-1);if(event.key==='ArrowRight')showLightbox(lightboxIndex+1)});
+  const lightboxFigure=$('.photo-lightbox figure');let lightboxStartX=0;
+  lightboxFigure?.addEventListener('pointerdown',event=>{lightboxStartX=event.clientX;lightboxFigure.setPointerCapture(event.pointerId)});
+  lightboxFigure?.addEventListener('pointerup',event=>{const delta=event.clientX-lightboxStartX;if(Math.abs(delta)>45)showLightbox(lightboxIndex+(delta<0?1:-1))});
   move(false);
 }
 
