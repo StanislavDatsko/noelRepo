@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#071827">
+  <meta name="description" content="NOËL — магнітний музичний мініпрогравач із 9 NFC-платівками для улюблених пісень і теплих спогадів.">
+  <meta property="og:title" content="NOËL — подаруйте мелодію, яку неможливо забути">
+  <meta property="og:description" content="9 платівок. Ваші пісні. Один особливий різдвяний подарунок.">
+  <meta property="og:image" content="img_and_video/photo1.avif">
+  <title>NOËL — музичний подарунок на Різдво</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,600;1,500;1,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <canvas class="snow-canvas" aria-hidden="true"></canvas>
+  <div class="scroll-progress" aria-hidden="true"><i></i></div>
+
+  <header class="hero" id="top">
+    <nav class="nav shell">
+      <a class="brand" href="#top" aria-label="NOËL — на початок">NOËL <small>09</small></a>
+      <a class="nav-order" href="#order">−22% · Замовити</a>
+    </nav>
+
+    <div class="hero-aura" aria-hidden="true"></div>
+    <div class="hero-orbit orbit-one" aria-hidden="true"></div>
+    <div class="hero-orbit orbit-two" aria-hidden="true"></div>
+
+    <div class="hero-copy shell">
+      <p class="overline hero-in"><span></span> Christmas edition · 2026</p>
+      <h1 class="hero-in"><span>Подаруй мелодію,</span><em>яку неможливо</em><span>забути.</span></h1>
+      <p class="hero-description hero-in">Магнітний ретропрогравач із 9 NFC-платівками — для улюблених пісень, голосів і різдвяних спогадів.</p>
+    </div>
+
+    <div class="hero-product hero-in" data-parallax="0.08">
+      <div class="hero-product-frame">
+        <img src="img_and_video/photo1.avif" alt="Різдвяний магнітний музичний мініпрогравач із дев’ятьма платівками" fetchpriority="high">
+      </div>
+      <p><span>01</span> Magnetic music player</p>
+    </div>
+
+    <div class="hero-offer shell hero-in">
+      <div class="hero-price">
+        <small>Різдвяна ціна</small>
+        <del>1 822,98 грн</del>
+        <strong>1 422,98 <i>грн</i></strong>
+        <b>−22% · економія 400 грн</b>
+      </div>
+      <a class="primary-button magnetic" href="#order">Отримати зі знижкою <span>↘</span></a>
+    </div>
+    <div class="hero-benefits shell hero-in" aria-label="Коротко про пропозицію">
+      <span><b>9</b> NFC-платівок</span>
+      <span><b>256 MB</b> для власної музики</span>
+      <span><b>−22%</b> різдвяна знижка</span>
+    </div>
+    <a class="hero-scroll" href="#emotion"><i></i><span>Дивитися історію</span></a>
+  </header>
+
+  <main>
+    <section class="emotion light-section" id="emotion">
+      <div class="shell">
+        <p class="chapter reveal"><span>02</span> The emotion</p>
+        <h2 class="editorial-title word-reveal">Деякі подарунки<br>залишаються <em>речами.</em><br>Інші стають<br><i>спогадами.</i></h2>
+        <div class="emotion-note reveal">
+          <span>09</span>
+          <p>Пісня з першої зустрічі.<br>Голос, який завжди поруч.<br>Мелодія, що звучить як дім.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="product-story dark-section" id="product">
+      <div class="product-sticky">
+        <div class="product-copy shell">
+          <p class="chapter reveal"><span>03</span> Discover the object</p>
+          <h2 class="reveal">Маленький об’єкт.<br><em>Велика історія.</em></h2>
+        </div>
+        <div class="product-mask" data-product-reveal>
+          <img src="img_and_video/photo3.avif" alt="Музичний мініпрогравач крупним планом" loading="lazy">
+          <div class="product-shade"></div>
+          <span class="product-index">01 / 09</span>
+        </div>
+        <div class="product-facts shell">
+          <p data-story="0"><b>256 MB</b><span>для власних MP3 і голосових повідомлень</span></p>
+          <p data-story="1"><b>Magnetic</b><span>кріплення для металевих поверхонь</span></p>
+          <p data-story="2"><b>Warm LED</b><span>м’яке світло для зимових вечорів</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="records light-section" id="records">
+      <div class="shell records-heading reveal">
+        <p class="chapter"><span>04</span> The nine records</p>
+        <h2>Одна платівка —<br><em>один момент.</em></h2>
+        <p>Торкніться платівки. Кожна може зберігати окрему композицію або голосове повідомлення.</p>
+      </div>
+      <div class="record-experience">
+        <div class="record-player" aria-hidden="true">
+          <div class="player-slot"><i></i></div>
+          <span>NOËL</span><small>Your memory player</small>
+        </div>
+        <div class="record-info" aria-live="polite">
+          <small id="record-number">Платівка 01</small>
+          <h3 id="record-title">Наша зимова пісня</h3>
+          <p id="record-text">Мелодія, яка повертає в особливий вечір.</p>
+        </div>
+        <div class="record-list" role="tablist" aria-label="Дев’ять NFC-платівок">
+          <button class="vinyl active" role="tab" aria-selected="true" data-number="01" data-title="Наша зимова пісня" data-text="Мелодія, яка повертає в особливий вечір."><i></i><span>01</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="02" data-title="Перша зустріч" data-text="Пісня, з якої почалася ваша історія."><i></i><span>02</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="03" data-title="Голос поруч" data-text="Тепле персональне повідомлення для близької людини."><i></i><span>03</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="04" data-title="Різдвяний ранок" data-text="Музика для світлого святкового ранку."><i></i><span>04</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="05" data-title="Дорога додому" data-text="Композиція, що завжди веде до рідних."><i></i><span>05</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="06" data-title="Тихий вечір" data-text="Спокійна мелодія для какао й теплого світла."><i></i><span>06</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="07" data-title="Для двох" data-text="Ваш особистий саундтрек без зайвих слів."><i></i><span>07</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="08" data-title="Загадай бажання" data-text="Мелодія для моменту, який хочеться запам’ятати."><i></i><span>08</span></button>
+          <button class="vinyl" role="tab" aria-selected="false" data-number="09" data-title="Нова традиція" data-text="Пісня, з якої почнеться ваше наступне Різдво."><i></i><span>09</span></button>
+        </div>
+      </div>
+      <div class="buy-panel shell reveal" id="records-offer">
+        <div class="buy-panel-copy"><small>Різдвяна пропозиція</small><h3>Створіть свої 9 музичних моментів.</h3></div>
+        <div class="buy-panel-price"><del>1 822,98 грн</del><strong>1 422,98 <i>грн</i></strong><em>−22%</em></div>
+        <a class="primary-button magnetic" href="#order">Замовити набір <span>↘</span></a>
+      </div>
+    </section>
+
+    <section class="video-story dark-section" id="video">
+      <div class="shell video-heading reveal">
+        <p class="chapter"><span>05</span> See it in action</p>
+        <h2>Музика оживає<br><em>в одному жесті.</em></h2>
+      </div>
+      <div class="video-frame reveal">
+        <video controls autoplay muted loop playsinline preload="metadata" poster="img_and_video/photo1.avif">
+          <source src="img_and_video/video.mp4" type="video/mp4">
+        </video>
+        <span class="video-mark">Real product · 12 sec</span>
+      </div>
+    </section>
+
+    <section class="details light-section" id="details">
+      <div class="shell reveal">
+        <p class="chapter"><span>06</span> Little details</p>
+        <h2>Продумано для<br><em>теплих моментів.</em></h2>
+      </div>
+      <div class="details-layout">
+        <figure class="detail-main reveal">
+          <img src="img_and_video/photo_product_user_guide.avif" alt="Комплектація мініпрогравача" loading="lazy">
+          <figcaption>Повний комплект</figcaption>
+        </figure>
+        <div class="detail-list shell">
+          <article class="reveal"><span>01</span><h3>9 NFC-платівок</h3><p>Кожній можна призначити свою композицію або голос.</p></article>
+          <article class="reveal"><span>02</span><h3>Власна музика</h3><p>256 MB пам’яті для персональних MP3-файлів.</p></article>
+          <article class="reveal"><span>03</span><h3>Магнітне кріплення</h3><p>Програвач залишається поруч на відповідній металевій поверхні.</p></article>
+          <article class="reveal"><span>04</span><h3>USB + LED</h3><p>Зручне заряджання та м’яке атмосферне світло.</p></article>
+        </div>
+      </div>
+      <div class="buy-panel shell reveal" id="details-offer">
+        <div class="buy-panel-copy"><small>Усе вже в комплекті</small><h3>Подарунок, готовий стати вашою історією.</h3></div>
+        <div class="buy-panel-price"><del>1 822,98 грн</del><strong>1 422,98 <i>грн</i></strong><em>−22%</em></div>
+        <a class="primary-button magnetic" href="#order">Забрати зі знижкою <span>↘</span></a>
+      </div>
+    </section>
+
+    <section class="gift dark-section" id="gift">
+      <div class="shell gift-copy reveal">
+        <p class="chapter"><span>07</span> Made for gifting</p>
+        <h2>Відкрийте<br><em>нову традицію.</em></h2>
+        <p>Маленька інтерактивна історія про подарунок, який говорить вашою музикою.</p>
+      </div>
+      <button class="gift-box" type="button" aria-expanded="false">
+        <span class="gift-lid"><i></i></span>
+        <span class="gift-body"><i></i></span>
+        <span class="gift-glow"></span>
+        <img src="img_and_video/photo1.avif" alt="Музичний програвач як різдвяний подарунок" loading="lazy">
+        <small>Натисніть, щоб відкрити</small>
+      </button>
+      <div class="gift-message" aria-live="polite"><strong>Даруйте не просто музику.</strong><span>Даруйте момент, до якого хочеться повертатися.</span></div>
+    </section>
+
+    <section class="gallery light-section" id="gallery">
+      <div class="shell reveal">
+        <p class="chapter"><span>08</span> A closer look</p>
+        <h2>Погляньте<br><em>ближче.</em></h2>
+      </div>
+      <div class="gallery-viewport reveal">
+        <div class="gallery-track">
+          <figure><img src="img_and_video/photo2.avif" alt="Набір NFC-платівок" loading="lazy"><figcaption>01 / Дев’ять платівок</figcaption></figure>
+          <figure><img src="img_and_video/photo4.avif" alt="Ретродизайн програвача" loading="lazy"><figcaption>02 / Ретродеталі</figcaption></figure>
+          <figure><img src="img_and_video/photo5.avif" alt="Магнітний програвач у просторі" loading="lazy"><figcaption>03 / Магнітний формат</figcaption></figure>
+          <figure><img src="img_and_video/photo6.avif" alt="Деталі підсвічування" loading="lazy"><figcaption>04 / Тепле світло</figcaption></figure>
+          <figure><img src="img_and_video/photo_product_user_guide.avif" alt="Інструкція до програвача" loading="lazy"><figcaption>05 / Простий старт</figcaption></figure>
+          <figure><img src="img_and_video/photo3.avif" alt="Різдвяний програвач крупним планом" loading="lazy"><figcaption>06 / Різдвяний об’єкт</figcaption></figure>
+        </div>
+        <div class="gallery-controls">
+          <button type="button" data-gallery-prev aria-label="Попереднє фото">←</button>
+          <span><i data-gallery-current>01</i> / 04</span>
+          <button type="button" data-gallery-next aria-label="Наступне фото">→</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="offer dark-section">
+      <div class="offer-rings" aria-hidden="true"></div>
+      <div class="shell offer-content reveal">
+        <p class="chapter"><span>09</span> Christmas offer</p>
+        <h2>Ваш особливий<br><em>різдвяний подарунок.</em></h2>
+        <div class="offer-price">
+          <span>замість <del>1 822,98 грн</del></span>
+          <strong>1 422,98 <small>грн</small></strong>
+          <b>−22% · економія 400 грн</b>
+        </div>
+        <a class="primary-button light magnetic" href="#order">Замовити подарунок <span>↘</span></a>
+      </div>
+    </section>
+
+    <section class="faq light-section">
+      <div class="shell">
+        <div class="reveal"><p class="chapter"><span>10</span> Questions</p><h2>Коротко про<br><em>важливе.</em></h2></div>
+        <div class="accordion reveal">
+          <details><summary>Чи можна завантажити власну музику?</summary><p>Так. Пристрій має 256 MB вбудованої пам’яті для власних MP3-файлів.</p></details>
+          <details><summary>Скільки платівок у наборі?</summary><p>У комплект входять дев’ять NFC-мініплатівок.</p></details>
+          <details><summary>Чи можна додати голосове повідомлення?</summary><p>Так, кожній платівці можна призначити персональне голосове повідомлення.</p></details>
+          <details><summary>Чи кріпиться програвач до холодильника?</summary><p>Так, він має магнітне кріплення для відповідних металевих поверхонь.</p></details>
+          <details><summary>Як заряджається пристрій?</summary><p>Через USB-кабель, який входить до комплекту.</p></details>
+        </div>
+        <div class="buy-panel reveal" id="faq-offer">
+          <div class="buy-panel-copy"><small>Відповіді отримано</small><h3>Готові подарувати власну музичну історію?</h3></div>
+          <div class="buy-panel-price"><del>1 822,98 грн</del><strong>1 422,98 <i>грн</i></strong><em>−22%</em></div>
+          <a class="primary-button magnetic" href="#order">Оформити замовлення <span>↘</span></a>
+        </div>
+      </div>
+    </section>
+
+    <section class="order dark-section" id="order">
+      <div class="shell order-layout">
+        <div class="order-copy reveal">
+          <p class="chapter"><span>11</span> Get your gift</p>
+          <h2>Збережіть цю<br><em>зиму в музиці.</em></h2>
+          <p>Залиште ім’я та номер телефону — ми зв’яжемося, щоб уточнити деталі.</p>
+          <div class="order-price"><del>1 822,98 грн</del><strong>1 422,98 <small>грн</small></strong><b>−22%</b></div>
+        </div>
+        <form id="order-form" class="reveal" novalidate>
+          <input class="honeypot" type="text" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+          <label>Ваше ім’я<input name="name" required minlength="2" maxlength="80" placeholder="Як до вас звертатися?" autocomplete="name"></label>
+          <label>Номер телефону<input name="phone" required placeholder="+380 XX XXX XX XX" inputmode="tel" autocomplete="tel"></label>
+          <label class="consent"><input type="checkbox" name="consent" required><span>Погоджуюсь на <a href="privacy.html">обробку персональних даних</a></span></label>
+          <button class="primary-button light" type="submit">Отримати зі знижкою <span>↘</span></button>
+          <p class="form-note">Після відправлення заявки ми зателефонуємо для підтвердження.</p>
+          <div class="form-status" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <aside class="sticky-buy" aria-label="Швидке замовлення">
+    <span><small><del>1 822,98 грн</del><em>−22%</em></small><b>1 422,98 грн</b></span>
+    <a class="primary-button light" href="#order">Замовити <i>↘</i></a>
+  </aside>
+  <footer><a href="#top">NOËL</a><p>A winter memory · 2026</p></footer>
+
+  <script src="config.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
