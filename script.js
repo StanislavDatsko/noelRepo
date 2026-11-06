@@ -21,13 +21,13 @@ function renderScroll(){
   progressBar.style.transform=`scaleX(${scrollY/max})`;
   if(!reduced&&heroProduct&&scrollY<innerHeight*1.2){if(scrollY>4)heroProduct.style.transform=`translate3d(0,${scrollY*.045}px,0) scale(${1+scrollY*.000035})`;else heroProduct.style.removeProperty('transform')}
   if(productSection&&productMask){
-    const rect=productSection.getBoundingClientRect();
     const travel=Math.max(1,productSection.offsetHeight-innerHeight);
-    // Tie the reveal to the headline: the photo starts moving only after
-    // the user has reached “Маленький об’єкт. Велика історія.”.
-    const headline=$('.product-copy h2',productSection);
-    const headlineStart=productSection.offsetTop+(headline?.offsetTop||120)-innerHeight*.72;
-    const value=Math.min(1,Math.max(0,(scrollY-headlineStart)/travel));
+    // Start only after the third section becomes sticky and its headline is
+    // fully visible. Starting at a viewport-entry threshold was too early.
+    const startDelay=Math.min(64,innerHeight*.08);
+    const headlineStart=productSection.offsetTop+startDelay;
+    const animationTravel=Math.max(1,travel-startDelay);
+    const value=Math.min(1,Math.max(0,(scrollY-headlineStart)/animationTravel));
     const inset=13*(1-value);
     productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
     if(!reduced)productImage.style.transform=`scale(${1.12-value*.12})`;
@@ -39,21 +39,28 @@ function renderScroll(){
 addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(renderScroll);ticking=true}},{passive:true});
 addEventListener('resize',renderScroll,{passive:true});renderScroll();
 
-// Multi-depth procedural six-arm snow crystals
+// Lightweight snow: capped pixel ratio, 30 FPS, fewer particles and no
+// expensive canvas filters. It starts on the first paint and pauses in a
+// background tab.
 if(!reduced){
-  const canvas=$('.snow-canvas'),ctx=canvas.getContext('2d',{alpha:true});
-  let width,height,dpr,flakes=[];
-  const count=()=>Math.min(62,Math.max(30,Math.round(innerWidth/7)));
-  function makeFlake(initial=false){const depth=.35+Math.random()*.9;return{x:Math.random()*width,y:initial?Math.random()*height:-24,size:(1.4+Math.random()*4.8)*depth,speed:(.42+Math.random()*.82)*depth,wind:(Math.random()-.5)*.18,phase:Math.random()*Math.PI*2,angle:Math.random()*Math.PI,spin:(Math.random()-.5)*.006,alpha:(.2+Math.random()*.55)*depth,crystal:Math.random()>.55,blur:Math.random()>.82?1.2:0}}
-  function setupSnow(){dpr=Math.min(devicePixelRatio||1,2);width=innerWidth;height=innerHeight;canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:count()},()=>makeFlake(true))}
-  function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.strokeStyle=`rgba(247,251,255,${Math.min(.72,f.alpha)})`;ctx.lineWidth=f.size>3?.65:.45;ctx.beginPath();for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,r=f.size*1.35,ex=Math.cos(angle)*r,ey=Math.sin(angle)*r;ctx.moveTo(0,0);ctx.lineTo(ex,ey);if(f.size>2.8){for(const point of [.5,.72]){const bx=Math.cos(angle)*r*point,by=Math.sin(angle)*r*point,branch=r*.22;ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle+.7)*branch,by+Math.sin(angle+.7)*branch);ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle-.7)*branch,by+Math.sin(angle-.7)*branch)}}}ctx.stroke();ctx.restore()}
-  function animateSnow(){ctx.clearRect(0,0,width,height);for(const f of flakes){f.y+=f.speed;f.x+=f.wind+Math.sin(f.phase+f.y*.009)*.18;f.angle+=f.spin;if(f.y>height+25||f.x<-30||f.x>width+30)Object.assign(f,makeFlake());if(f.crystal&&f.size>2)drawCrystal(f);else{ctx.beginPath();ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.fillStyle=`rgba(247,251,255,${f.alpha*.72})`;ctx.arc(f.x,f.y,Math.max(.45,f.size*.22),0,Math.PI*2);ctx.fill()}}ctx.filter='none';requestAnimationFrame(animateSnow)}
-  setupSnow();
-  addEventListener('resize',setupSnow,{passive:true});
-  // Start on the first paint as well as on subsequent scroll repaints.
-  canvas.style.display='block';
-  requestAnimationFrame(()=>{animateSnow()});
-  setTimeout(()=>{if(document.visibilityState==='visible')canvas.style.display='block'},0);
+  const canvas=$('.snow-canvas');
+  const ctx=canvas?.getContext('2d',{alpha:true,desynchronized:true});
+  if(canvas&&ctx){
+    let width=0,height=0,dpr=1,flakes=[],frame=0,lastPaint=0,running=false;
+    const isMobile=()=>innerWidth<700;
+    const flakeCount=()=>isMobile()?20:34;
+    function makeFlake(initial=false){const depth=.45+Math.random()*.65;return{x:Math.random()*width,y:initial?Math.random()*height:-12,size:(1.1+Math.random()*2.8)*depth,speed:(22+Math.random()*34)*depth,wind:(Math.random()-.5)*7,phase:Math.random()*Math.PI*2,angle:Math.random()*Math.PI,spin:(Math.random()-.5)*.5,alpha:(.28+Math.random()*.42)*depth,crystal:Math.random()>.76}}
+    function setupSnow(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.35);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>makeFlake(true));drawSnow(0)}
+    function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.strokeStyle=`rgba(247,251,255,${f.alpha})`;ctx.lineWidth=.6;ctx.beginPath();for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,r=f.size*1.45;ctx.moveTo(0,0);ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r)}ctx.stroke();ctx.restore()}
+    function drawSnow(delta){ctx.clearRect(0,0,width,height);for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)Object.assign(f,makeFlake());if(f.crystal)drawCrystal(f);else{ctx.beginPath();ctx.fillStyle=`rgba(247,251,255,${f.alpha})`;ctx.arc(f.x,f.y,Math.max(.65,f.size*.35),0,Math.PI*2);ctx.fill()}}}
+    function animateSnow(time){if(!running)return;frame=requestAnimationFrame(animateSnow);if(time-lastPaint<33)return;const delta=Math.min(.05,(time-lastPaint||33)/1000);lastPaint=time;drawSnow(delta)}
+    function startSnow(){if(running)return;running=true;lastPaint=performance.now()-34;frame=requestAnimationFrame(animateSnow)}
+    function stopSnow(){running=false;cancelAnimationFrame(frame)}
+    setupSnow();startSnow();
+    addEventListener('resize',setupSnow,{passive:true});
+    addEventListener('pageshow',startSnow,{passive:true});
+    document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSnow();else startSnow()});
+  }
 }
 
 // Nine records interaction
