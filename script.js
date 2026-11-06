@@ -29,7 +29,7 @@ const immersiveImage=$('img',immersivePhoto);
 const depthPhotos=$$('[data-photo-depth]').map(figure=>({figure,image:$('img',figure),depth:Number(figure.dataset.photoDepth)||0,top:0,height:0}));
 const sticky=$('.sticky-buy'),order=$('#order'),hero=$('.hero');
 const clamp=value=>Math.min(1,Math.max(0,value));
-const ease=value=>1-Math.pow(1-clamp(value),3);
+const ease=value=>{const t=clamp(value);return t*t*(3-2*t)};
 const phase=(value,start,end)=>ease((value-start)/(end-start));
 const layout={maxScroll:1,headlineStart:0,storyEnd:1,immersiveTop:0,immersiveHeight:0,heroHeight:0,orderTop:0,orderBottom:0};
 let ticking=false,measureTicking=false;
@@ -54,8 +54,8 @@ function renderScroll(){
       storyFacts.forEach(fact=>fact.classList.add('active'));
     }else{
     const value=clamp((y-layout.headlineStart)/Math.max(1,layout.storyEnd-layout.headlineStart));
-    const intro=phase(value,0,.18),accent=phase(value,.1,.31),description=phase(value,.2,.38);
-    const photo=phase(value,.42,.8),outro=phase(value,.82,1);
+    const intro=phase(value,0,.24),accent=phase(value,.12,.38),description=phase(value,.26,.5);
+    const photo=phase(value,.5,.88),outro=phase(value,.88,1);
     if(storyChapter){storyChapter.style.opacity=String(intro);storyChapter.style.transform=`translate3d(0,${(1-intro)*16}px,0)`}
     if(storyLineOne){storyLineOne.style.opacity=String(intro);storyLineOne.style.transform=`translate3d(0,${(1-intro)*108}%,0)`}
     if(storyLineTwo){storyLineTwo.style.opacity=String(accent);storyLineTwo.style.transform=`translate3d(0,${(1-accent)*108}%,0) scale(${.94+accent*.06})`}
@@ -88,6 +88,26 @@ addEventListener('pageshow',scheduleMeasure,{passive:true});
 document.fonts?.ready.then(scheduleMeasure);
 new ResizeObserver(scheduleMeasure).observe(document.body);
 measureLayout();renderScroll();
+
+// A real, configurable urgency cue. Without a configured deadline it counts down
+// to the next daily offer refresh rather than inventing a false expiry date.
+const offerTimer=$('[data-offer-timer]'),offerTimerLabel=$('[data-offer-timer-label]');
+if(offerTimer){
+  const configuredDeadline=window.STORE_CONFIG?.offerDeadline;
+  const parsedDeadline=configuredDeadline?Date.parse(configuredDeadline):NaN;
+  let target=Number.isFinite(parsedDeadline)?parsedDeadline:0;
+  if(target)offerTimerLabel.textContent='До завершення акції залишилось';
+  const nextRefresh=()=>{const date=new Date();date.setHours(24,0,0,0);return date.getTime()};
+  const renderOfferTimer=()=>{
+    if(!target||target<=Date.now())target=nextRefresh();
+    const seconds=Math.max(0,Math.floor((target-Date.now())/1000));
+    const hours=String(Math.floor(seconds/3600)).padStart(2,'0');
+    const minutes=String(Math.floor(seconds%3600/60)).padStart(2,'0');
+    const secs=String(seconds%60).padStart(2,'0');
+    offerTimer.textContent=`${hours}:${minutes}:${secs}`;
+  };
+  renderOfferTimer();setInterval(renderOfferTimer,1000);
+}
 
 // Lightweight snow: capped pixel ratio, 30 FPS, fewer particles and no
 // expensive canvas filters. It starts on the first paint and pauses in a
@@ -194,5 +214,5 @@ $('#order-form')?.addEventListener('submit',async event=>{
   if(data.name.trim().length<2||!/^\+380\d{9}$/.test(data.phone)||!data.consent){status.textContent='Перевірте ім’я, номер у форматі +380 та згоду на обробку даних.';status.className='form-status error';return}
   button.disabled=true;button.innerHTML='Надсилаємо…';status.textContent='';status.className='form-status';Object.assign(data,{product:window.STORE_CONFIG?.product||'Різдвяний магнітний мініпрогравач',price:window.STORE_CONFIG?.currencyPrice||'1422.98',traffic:trafficData()});
   try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';form.reset();window.dataLayer?.push({event:'Lead'})}
-  catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>↘</span>'}
+  catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>→</span>'}
 });
