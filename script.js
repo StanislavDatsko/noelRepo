@@ -25,8 +25,8 @@ function renderScroll(){
     const travel=Math.max(1,productSection.offsetHeight-innerHeight);
     // Tie the reveal to the headline: the photo starts moving only after
     // the user has reached “Маленький об’єкт. Велика історія.”.
-    const copy=$('.product-copy',productSection);
-    const headlineStart=productSection.offsetTop+(copy?.offsetTop||82)+24;
+    const headline=$('.product-copy h2',productSection);
+    const headlineStart=productSection.offsetTop+(headline?.offsetTop||120)-innerHeight*.72;
     const value=Math.min(1,Math.max(0,(scrollY-headlineStart)/travel));
     const inset=13*(1-value);
     productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
@@ -44,7 +44,7 @@ if(!reduced){
   const canvas=$('.snow-canvas'),ctx=canvas.getContext('2d',{alpha:true});
   let width,height,dpr,flakes=[];
   const count=()=>Math.min(62,Math.max(30,Math.round(innerWidth/7)));
-  function makeFlake(initial=false){const depth=.35+Math.random()*.9;return{x:Math.random()*width,y:initial?Math.random()*height:-24,size:(1.2+Math.random()*4.5)*depth,speed:(.22+Math.random()*.62)*depth,wind:(Math.random()-.5)*.18,phase:Math.random()*Math.PI*2,angle:Math.random()*Math.PI,spin:(Math.random()-.5)*.006,alpha:(.14+Math.random()*.5)*depth,crystal:Math.random()>.55,blur:Math.random()>.82?1.2:0}}
+  function makeFlake(initial=false){const depth=.35+Math.random()*.9;return{x:Math.random()*width,y:initial?Math.random()*height:-24,size:(1.4+Math.random()*4.8)*depth,speed:(.42+Math.random()*.82)*depth,wind:(Math.random()-.5)*.18,phase:Math.random()*Math.PI*2,angle:Math.random()*Math.PI,spin:(Math.random()-.5)*.006,alpha:(.2+Math.random()*.55)*depth,crystal:Math.random()>.55,blur:Math.random()>.82?1.2:0}}
   function setupSnow(){dpr=Math.min(devicePixelRatio||1,2);width=innerWidth;height=innerHeight;canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:count()},()=>makeFlake(true))}
   function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.strokeStyle=`rgba(247,251,255,${Math.min(.72,f.alpha)})`;ctx.lineWidth=f.size>3?.65:.45;ctx.beginPath();for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,r=f.size*1.35,ex=Math.cos(angle)*r,ey=Math.sin(angle)*r;ctx.moveTo(0,0);ctx.lineTo(ex,ey);if(f.size>2.8){for(const point of [.5,.72]){const bx=Math.cos(angle)*r*point,by=Math.sin(angle)*r*point,branch=r*.22;ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle+.7)*branch,by+Math.sin(angle+.7)*branch);ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle-.7)*branch,by+Math.sin(angle-.7)*branch)}}}ctx.stroke();ctx.restore()}
   function animateSnow(){ctx.clearRect(0,0,width,height);for(const f of flakes){f.y+=f.speed;f.x+=f.wind+Math.sin(f.phase+f.y*.009)*.18;f.angle+=f.spin;if(f.y>height+25||f.x<-30||f.x>width+30)Object.assign(f,makeFlake());if(f.crystal&&f.size>2)drawCrystal(f);else{ctx.beginPath();ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.fillStyle=`rgba(247,251,255,${f.alpha*.72})`;ctx.arc(f.x,f.y,Math.max(.45,f.size*.22),0,Math.PI*2);ctx.fill()}}ctx.filter='none';requestAnimationFrame(animateSnow)}
