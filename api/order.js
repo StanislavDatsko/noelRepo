@@ -25,7 +25,10 @@ export default async function handler(req, res) {
 
   const sheetsUrl = process.env.GOOGLE_SHEETS_WEBHOOK_URL;
   const sheetsSecret = process.env.GOOGLE_SHEETS_WEBHOOK_SECRET;
-  if (!sheetsUrl || !sheetsSecret) return res.status(503).json({ error: 'Order integrations are not configured' });
+  const sheetsEnabled = Boolean(sheetsUrl && sheetsSecret);
+  const telegramEnabled = Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
+  // At least one receiver must be configured, otherwise a lead would be silently lost.
+  if (!sheetsEnabled && !telegramEnabled) return res.status(503).json({ error: 'Order integrations are not configured' });
 
   const now = new Date().toLocaleString('uk-UA', { timeZone: 'Europe/Kyiv' });
   const safeTraffic = traffic && typeof traffic === 'object' ? traffic : {};
@@ -34,15 +37,20 @@ export default async function handler(req, res) {
   const source = Object.entries(safeTraffic).filter(([k, v]) => /^(utm_|gclid$|fbclid$|ttclid$)/.test(k) && typeof v === 'string').map(([k, v]) => `${k}: ${v.slice(0, 160)}`).join(', ') || 'прямий захід';
   const message = `🎄 НОВЕ НОВОРІЧНЕ ЗАМОВЛЕННЯ!\n\n👤 Ім’я: ${cleanName}\n📞 Телефон: ${phone}\n🎁 Товар: Різдвяний магнітний мініпрогравач\n💰 Ціна: 1 422,98 грн\n📅 Дата: ${now}\n📢 Джерело: ${source}`;
 
-  const sheetsRequest = fetch(sheetsUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: cleanName, phone, utm_source: utmSource, utm_campaign: utmCampaign, secret: sheetsSecret }) }).then(async response => {
+  const sheetsRequest = !sheetsEnabled ? Promise.resolve() : fetch(sheetsUrl, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: cleanName, phone, utm_source: utmSource, utm_campaign: utmCampaign, secret: sheetsSecret }) }).then(async response => {
     const payload = await readPayload(response);
     if (!response.ok || !confirmed(payload)) throw new Error('Google Sheets was not confirmed');
   });
-  const telegramRequest = process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID ? fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text: message }) }).then(response => { if (!response.ok) throw new Error('Telegram failed'); }) : Promise.resolve();
-  try {
-    await Promise.all([sheetsRequest, telegramRequest]);
-    recentOrders.set(duplicateKey, Date.now());
-    for (const [key, timestamp] of recentOrders) if (Date.now() - timestamp > DEDUPE_WINDOW_MS) recentOrders.delete(key);
-    return res.status(200).json({ ok: true });
-  } catch { return res.status(502).json({ error: 'Order delivery failed' }); }
+  const telegramRequest = telegramEnabled ? fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chat_id: process.env.TELEGRAM_CHAT_ID, text: message }) }).then(async response => { const payload = await readPayload(response); if (!response.ok || payload.ok !== true) throw new Error('Telegram failed'); }) : Promise.resolve();
+  // Deliver to every configured channel. The lead counts as received if at least one
+  // channel confirmed it, so a temporary outage of one channel never loses the order
+  // (and never makes the customer resubmit and create duplicates in the other channel).
+  const results = await Promise.allSettled([sheetsRequest, telegramRequest]);
+  const failed = results.filter(r => r.status === 'rejected');
+  failed.forEach(r => console.error('Order delivery channel failed:', r.reason?.message));
+  const channels = [sheetsEnabled, telegramEnabled].filter(Boolean).length;
+  if (failed.length >= channels) return res.status(502).json({ error: 'Order delivery failed' });
+  recentOrders.set(duplicateKey, Date.now());
+  for (const [key, timestamp] of recentOrders) if (Date.now() - timestamp > DEDUPE_WINDOW_MS) recentOrders.delete(key);
+  return res.status(200).json({ ok: true });
 }
