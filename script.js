@@ -48,7 +48,12 @@ if(!reduced){
   function setupSnow(){dpr=Math.min(devicePixelRatio||1,2);width=innerWidth;height=innerHeight;canvas.width=width*dpr;canvas.height=height*dpr;canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:count()},()=>makeFlake(true))}
   function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.strokeStyle=`rgba(247,251,255,${Math.min(.72,f.alpha)})`;ctx.lineWidth=f.size>3?.65:.45;ctx.beginPath();for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,r=f.size*1.35,ex=Math.cos(angle)*r,ey=Math.sin(angle)*r;ctx.moveTo(0,0);ctx.lineTo(ex,ey);if(f.size>2.8){for(const point of [.5,.72]){const bx=Math.cos(angle)*r*point,by=Math.sin(angle)*r*point,branch=r*.22;ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle+.7)*branch,by+Math.sin(angle+.7)*branch);ctx.moveTo(bx,by);ctx.lineTo(bx+Math.cos(angle-.7)*branch,by+Math.sin(angle-.7)*branch)}}}ctx.stroke();ctx.restore()}
   function animateSnow(){ctx.clearRect(0,0,width,height);for(const f of flakes){f.y+=f.speed;f.x+=f.wind+Math.sin(f.phase+f.y*.009)*.18;f.angle+=f.spin;if(f.y>height+25||f.x<-30||f.x>width+30)Object.assign(f,makeFlake());if(f.crystal&&f.size>2)drawCrystal(f);else{ctx.beginPath();ctx.filter=f.blur?`blur(${f.blur}px)`:'none';ctx.fillStyle=`rgba(247,251,255,${f.alpha*.72})`;ctx.arc(f.x,f.y,Math.max(.45,f.size*.22),0,Math.PI*2);ctx.fill()}}ctx.filter='none';requestAnimationFrame(animateSnow)}
-  setupSnow();addEventListener('resize',setupSnow,{passive:true});animateSnow();
+  setupSnow();
+  addEventListener('resize',setupSnow,{passive:true});
+  // Start on the first paint as well as on subsequent scroll repaints.
+  canvas.style.display='block';
+  requestAnimationFrame(()=>{animateSnow()});
+  setTimeout(()=>{if(document.visibilityState==='visible')canvas.style.display='block'},0);
 }
 
 // Nine records interaction
