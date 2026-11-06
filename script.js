@@ -23,10 +23,11 @@ function renderScroll(){
   if(productSection&&productMask){
     const rect=productSection.getBoundingClientRect();
     const travel=Math.max(1,productSection.offsetHeight-innerHeight);
-    // Begin revealing the object as soon as the story enters the viewport,
-    // instead of waiting until the section reaches the very top.
-    const startOffset=innerHeight*.18;
-    const value=Math.min(1,Math.max(0,(startOffset-rect.top)/travel));
+    // Tie the reveal to the headline: the photo starts moving only after
+    // the user has reached “Маленький об’єкт. Велика історія.”.
+    const copy=$('.product-copy',productSection);
+    const headlineStart=productSection.offsetTop+(copy?.offsetTop||82)+24;
+    const value=Math.min(1,Math.max(0,(scrollY-headlineStart)/travel));
     const inset=13*(1-value);
     productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
     if(!reduced)productImage.style.transform=`scale(${1.12-value*.12})`;
