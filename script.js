@@ -23,7 +23,10 @@ function renderScroll(){
   if(productSection&&productMask){
     const rect=productSection.getBoundingClientRect();
     const travel=Math.max(1,productSection.offsetHeight-innerHeight);
-    const value=Math.min(1,Math.max(0,-rect.top/travel));
+    // Begin revealing the object as soon as the story enters the viewport,
+    // instead of waiting until the section reaches the very top.
+    const startOffset=innerHeight*.18;
+    const value=Math.min(1,Math.max(0,(startOffset-rect.top)/travel));
     const inset=13*(1-value);
     productMask.style.clipPath=`inset(0 ${inset}% 0 ${inset}% round ${2+value*16}px)`;
     if(!reduced)productImage.style.transform=`scale(${1.12-value*.12})`;
