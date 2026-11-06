@@ -8,7 +8,7 @@ afterFirstPaint(()=>document.documentElement.classList.add('effects-ready'));
 // Editorial reveals
 const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
   if(entry.isIntersecting){entry.target.classList.add('visible');revealObserver.unobserve(entry.target)}
-}),{threshold:.12,rootMargin:'0px 0px -5%'});
+}),{threshold:.04,rootMargin:'0px 0px 8%'});
 $$('.reveal').forEach(element=>revealObserver.observe(element));
 
 // Scroll-linked progress, hero depth and product reveal
@@ -216,6 +216,6 @@ $$('.order-form').forEach(orderForm=>orderForm.addEventListener('submit',async e
   event.preventDefault();const form=event.currentTarget,button=$('button[type=submit]',form),status=$('.form-status',form),data=Object.fromEntries(new FormData(form));
   if(data.name.trim().length<2||!/^\+380\d{9}$/.test(data.phone)||!data.consent){status.textContent='Перевірте ім’я, номер у форматі +380 та згоду на обробку даних.';status.className='form-status error';return}
   button.disabled=true;button.innerHTML='Надсилаємо…';status.textContent='';status.className='form-status';Object.assign(data,{product:window.STORE_CONFIG?.product||'Різдвяний магнітний мініпрогравач',price:window.STORE_CONFIG?.currencyPrice||'1422.98',traffic:trafficData()});
-  try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';form.reset();window.dataLayer?.push({event:'Lead'})}
+  try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';button.innerHTML='Заявку прийнято <span>✓</span>';form.reset();window.dataLayer?.push({event:'Lead'})}
   catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>→</span>'}
 }));
