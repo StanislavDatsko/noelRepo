@@ -2,6 +2,8 @@ const $=(selector,context=document)=>context.querySelector(selector);
 const $$=(selector,context=document)=>[...context.querySelectorAll(selector)];
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
 document.documentElement.classList.add('js');
+const afterFirstPaint=callback=>requestAnimationFrame(()=>requestAnimationFrame(callback));
+afterFirstPaint(()=>document.documentElement.classList.add('effects-ready'));
 
 // Editorial reveals
 const revealObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{
@@ -20,15 +22,30 @@ const storyChapter=$('.product-copy .chapter');
 const storyLineOne=$('.story-line-one i');
 const storyLineTwo=$('.story-line-two i');
 const productIntro=$('.product-intro');
+const storyCopy=$('[data-cinematic-copy]',productSection);
+const productShade=$('.product-shade');
 const immersivePhoto=$('[data-photo-reveal]');
-const depthPhotos=$$('[data-photo-depth]');
+const immersiveImage=$('img',immersivePhoto);
+const depthPhotos=$$('[data-photo-depth]').map(figure=>({figure,image:$('img',figure),depth:Number(figure.dataset.photoDepth)||0,top:0,height:0}));
+const sticky=$('.sticky-buy'),order=$('#order'),hero=$('.hero');
 const clamp=value=>Math.min(1,Math.max(0,value));
 const ease=value=>1-Math.pow(1-clamp(value),3);
 const phase=(value,start,end)=>ease((value-start)/(end-start));
-let ticking=false;
+const layout={maxScroll:1,headlineStart:0,storyEnd:1,immersiveTop:0,immersiveHeight:0,heroHeight:0,orderTop:0,orderBottom:0};
+let ticking=false,measureTicking=false;
+function measureLayout(){
+  layout.maxScroll=Math.max(1,document.documentElement.scrollHeight-innerHeight);
+  if(productSection){const top=productSection.getBoundingClientRect().top+scrollY,travel=Math.max(1,productSection.offsetHeight-innerHeight);layout.headlineStart=top+(storyCopy?.offsetTop||64)-innerHeight*.7;layout.storyEnd=top+travel}
+  if(immersivePhoto){const rect=immersivePhoto.getBoundingClientRect();layout.immersiveTop=rect.top+scrollY;layout.immersiveHeight=rect.height}
+  depthPhotos.forEach(item=>{const rect=item.figure.getBoundingClientRect();item.top=rect.top+scrollY;item.height=rect.height});
+  layout.heroHeight=hero?.offsetHeight||innerHeight;
+  if(order){const rect=order.getBoundingClientRect();layout.orderTop=rect.top+scrollY;layout.orderBottom=layout.orderTop+rect.height}
+  measureTicking=false;
+}
+function scheduleMeasure(){if(measureTicking)return;measureTicking=true;requestAnimationFrame(()=>{measureLayout();renderScroll()})}
 function renderScroll(){
-  const max=Math.max(1,document.documentElement.scrollHeight-innerHeight);
-  progressBar.style.transform=`scaleX(${scrollY/max})`;
+  const y=scrollY;
+  progressBar.style.transform=`scaleX(${y/layout.maxScroll})`;
   if(!reduced&&heroProduct&&scrollY<innerHeight*1.2){if(scrollY>4)heroProduct.style.transform=`translate3d(0,${scrollY*.045}px,0) scale(${1+scrollY*.000035})`;else heroProduct.style.removeProperty('transform')}
   if(productSection&&productMask){
     if(reduced){
@@ -36,12 +53,7 @@ function renderScroll(){
       productSection.style.setProperty('--story-light','.55');
       storyFacts.forEach(fact=>fact.classList.add('active'));
     }else{
-    const travel=Math.max(1,productSection.offsetHeight-innerHeight);
-    const copy=$('[data-cinematic-copy]',productSection);
-    const sectionTop=productSection.getBoundingClientRect().top+scrollY;
-    const headlineStart=sectionTop+(copy?.offsetTop||64)-innerHeight*.7;
-    const storyEnd=sectionTop+travel;
-    const value=clamp((scrollY-headlineStart)/Math.max(1,storyEnd-headlineStart));
+    const value=clamp((y-layout.headlineStart)/Math.max(1,layout.storyEnd-layout.headlineStart));
     const intro=phase(value,0,.18),accent=phase(value,.1,.31),description=phase(value,.2,.38);
     const photo=phase(value,.42,.8),outro=phase(value,.82,1);
     if(storyChapter){storyChapter.style.opacity=String(intro);storyChapter.style.transform=`translate3d(0,${(1-intro)*16}px,0)`}
@@ -53,25 +65,29 @@ function renderScroll(){
     productMask.style.opacity=String(photo);
     productMask.style.transform=`translate3d(0,${(1-photo)*28-outro*14}px,0) scale(${.97+photo*.03-outro*.012})`;
     productSection.style.setProperty('--story-light',String(photo*(1-outro*.35)));
-    productImage.style.transform=`scale(${1.12-photo*.12})`;productImage.style.filter=`brightness(${.82+photo*.18})`;
+    productImage.style.transform=`scale(${1.12-photo*.12})`;
+    if(productShade)productShade.style.opacity=String(.48-photo*.26);
     const active=photo<.06?-1:Math.min(2,Math.floor(photo*3));
     storyFacts.forEach((fact,index)=>fact.classList.toggle('active',index===active));
     }
   }
   if(immersivePhoto){
-    const rect=immersivePhoto.getBoundingClientRect();
-    const photoProgress=clamp((innerHeight*.86-rect.top)/(innerHeight*.72));
+    const photoTop=layout.immersiveTop-y;
+    const photoProgress=clamp((innerHeight*.86-photoTop)/(innerHeight*.72));
     if(!reduced)immersivePhoto.style.clipPath=`inset(0 ${9*(1-photoProgress)}% round ${8+photoProgress*10}px)`;
-    const image=$('img',immersivePhoto);if(image&&!reduced)image.style.transform=`scale(${1.1-photoProgress*.1})`;
+    if(immersiveImage&&!reduced)immersiveImage.style.transform=`scale(${1.1-photoProgress*.1})`;
   }
-  if(!reduced)depthPhotos.forEach(figure=>{const rect=figure.getBoundingClientRect();if(rect.bottom<0||rect.top>innerHeight)return;const depth=Number(figure.dataset.photoDepth)||0;const image=$('img',figure);if(image)image.style.transform=`translate3d(0,${(innerHeight/2-(rect.top+rect.height/2))*depth}px,0) scale(1.06)`});
+  if(!reduced)depthPhotos.forEach(item=>{const top=item.top-y;if(top+item.height<0||top>innerHeight)return;if(item.image)item.image.style.transform=`translate3d(0,${(innerHeight/2-(top+item.height/2))*item.depth}px,0) scale(1.06)`});
+  if(sticky){const orderVisible=y+innerHeight>layout.orderTop&&y<layout.orderBottom;sticky.classList.toggle('show',y>layout.heroHeight*.68&&!orderVisible)}
   ticking=false;
 }
 addEventListener('scroll',()=>{if(!ticking){requestAnimationFrame(renderScroll);ticking=true}},{passive:true});
-addEventListener('resize',renderScroll,{passive:true});
-addEventListener('load',renderScroll,{once:true});
-addEventListener('pageshow',renderScroll,{passive:true});
-renderScroll();
+addEventListener('resize',scheduleMeasure,{passive:true});
+addEventListener('load',scheduleMeasure,{once:true});
+addEventListener('pageshow',scheduleMeasure,{passive:true});
+document.fonts?.ready.then(scheduleMeasure);
+new ResizeObserver(scheduleMeasure).observe(document.body);
+measureLayout();renderScroll();
 
 // Lightweight snow: capped pixel ratio, 30 FPS, fewer particles and no
 // expensive canvas filters. It starts on the first paint and pauses in a
@@ -80,21 +96,36 @@ if(!reduced){
   const canvas=$('.snow-canvas');
   const ctx=canvas?.getContext('2d',{alpha:true,desynchronized:true});
   if(canvas&&ctx){
-    let width=0,height=0,dpr=1,flakes=[],frame=0,lastPaint=0,running=false;
+    let width=0,height=0,dpr=1,flakes=[],frame=0,lastPaint=0,running=false,resizeFrame=0;
     const isMobile=()=>innerWidth<700;
-    const flakeCount=()=>isMobile()?20:34;
-    function makeFlake(initial=false){const depth=.45+Math.random()*.65;return{x:Math.random()*width,y:initial?Math.random()*height:-12,size:(1.1+Math.random()*2.8)*depth,speed:(22+Math.random()*34)*depth,wind:(Math.random()-.5)*7,phase:Math.random()*Math.PI*2,angle:Math.random()*Math.PI,spin:(Math.random()-.5)*.5,alpha:(.28+Math.random()*.42)*depth,crystal:Math.random()>.76}}
-    function setupSnow(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.35);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>makeFlake(true));drawSnow(0)}
-    function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.strokeStyle=`rgba(247,251,255,${f.alpha})`;ctx.lineWidth=.6;ctx.beginPath();for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,r=f.size*1.45;ctx.moveTo(0,0);ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r)}ctx.stroke();ctx.restore()}
-    function drawSnow(delta){ctx.clearRect(0,0,width,height);for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)Object.assign(f,makeFlake());if(f.crystal)drawCrystal(f);else{ctx.beginPath();ctx.fillStyle=`rgba(247,251,255,${f.alpha})`;ctx.arc(f.x,f.y,Math.max(.65,f.size*.35),0,Math.PI*2);ctx.fill()}}}
+    const flakeCount=()=>isMobile()?18:30;
+    const crystalPath=new Path2D();
+    for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,x=Math.cos(angle),y=Math.sin(angle);crystalPath.moveTo(0,0);crystalPath.lineTo(x*1.45,y*1.45);for(const side of [-1,1]){const branch=angle+side*.58;crystalPath.moveTo(x*.86,y*.86);crystalPath.lineTo(x*.86+Math.cos(branch)*.36,y*.86+Math.sin(branch)*.36)}}
+    function resetFlake(f,initial=false){const depth=.45+Math.random()*.65;f.x=Math.random()*width;f.y=initial?Math.random()*height:-14;f.size=(1.1+Math.random()*2.8)*depth;f.speed=(22+Math.random()*34)*depth;f.wind=(Math.random()-.5)*7;f.phase=Math.random()*Math.PI*2;f.angle=Math.random()*Math.PI;f.spin=(Math.random()-.5)*.5;f.alpha=(.28+Math.random()*.42)*depth;f.crystal=Math.random()>.78;return f}
+    function setupSnow(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.25);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>resetFlake({},true));drawSnow(0)}
+    function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.size,f.size);ctx.globalAlpha=f.alpha;ctx.lineWidth=.48/f.size;ctx.stroke(crystalPath);ctx.restore()}
+    function drawSnow(delta){ctx.clearRect(0,0,width,height);ctx.fillStyle='#f7fbff';ctx.strokeStyle='#f7fbff';for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)resetFlake(f);if(f.crystal)drawCrystal(f);else{ctx.globalAlpha=f.alpha;const size=Math.max(1,f.size*.55);ctx.fillRect(f.x,f.y,size,size)}}ctx.globalAlpha=1}
     function animateSnow(time){if(!running)return;frame=requestAnimationFrame(animateSnow);if(time-lastPaint<33)return;const delta=Math.min(.05,(time-lastPaint||33)/1000);lastPaint=time;drawSnow(delta)}
-    function startSnow(){if(running)return;running=true;lastPaint=performance.now()-34;frame=requestAnimationFrame(animateSnow)}
+    function startSnow(){if(running||document.hidden)return;running=true;lastPaint=performance.now()-34;frame=requestAnimationFrame(animateSnow)}
     function stopSnow(){running=false;cancelAnimationFrame(frame)}
-    setupSnow();startSnow();
-    addEventListener('resize',setupSnow,{passive:true});
+    setupSnow();afterFirstPaint(startSnow);
+    addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(setupSnow)},{passive:true});
     addEventListener('pageshow',startSnow,{passive:true});
+    addEventListener('pagehide',stopSnow,{passive:true});
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSnow();else startSnow()});
   }
+}
+
+// The video keeps its poster on initial load. Its source is attached only when
+// the section is close, and playback starts only while it is actually visible.
+const deferredVideo=$('[data-deferred-video]');
+if(deferredVideo){
+  const source=$('source[data-src]',deferredVideo);let videoLoaded=false;
+  const loadVideo=()=>{if(videoLoaded||!source)return;videoLoaded=true;source.src=source.dataset.src;source.removeAttribute('data-src');deferredVideo.load()};
+  const loadObserver=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){loadVideo();loadObserver.disconnect()}},{rootMargin:'500px 0px'});
+  const playObserver=new IntersectionObserver(entries=>entries.forEach(entry=>{if(entry.isIntersecting){loadVideo();if(!reduced&&deferredVideo.hasAttribute('data-autoplay'))deferredVideo.play().catch(()=>{})}else deferredVideo.pause()}),{threshold:.15});
+  loadObserver.observe(deferredVideo);playObserver.observe(deferredVideo);
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)deferredVideo.pause();else if(!reduced&&deferredVideo.getBoundingClientRect().top<innerHeight&&deferredVideo.getBoundingClientRect().bottom>0)deferredVideo.play().catch(()=>{})});
 }
 
 // Nine records interaction
@@ -120,12 +151,12 @@ if(galleryTrack){
   const counter=$('[data-gallery-current]');
   const totalLabel=$('[data-gallery-total]');if(totalLabel)totalLabel.textContent=String(total).padStart(2,'0');
   function updateCounter(){counter.textContent=String(index===0?total:index===total+1?1:index).padStart(2,'0')}
-  function move(animate=true){galleryTrack.style.transition=animate?'transform .65s var(--ease)':'none';galleryTrack.style.transform=`translate3d(-${index*100}%,0,0)`;updateCounter()}
-  function normalize(){if(index===0){index=total;move(false)}else if(index===total+1){index=1;move(false)}}
+  function move(animate=true){galleryTrack.style.willChange=animate?'transform':'auto';galleryTrack.style.transition=animate?'transform .65s var(--ease)':'none';galleryTrack.style.transform=`translate3d(-${index*100}%,0,0)`;updateCounter()}
+  function normalize(){if(index===0){index=total;move(false)}else if(index===total+1){index=1;move(false)}galleryTrack.style.willChange='auto'}
   galleryTrack.addEventListener('transitionend',normalize);
   $('[data-gallery-prev]')?.addEventListener('click',()=>{if(index<=0)return;index--;move()});
   $('[data-gallery-next]')?.addEventListener('click',()=>{if(index>=total+1)return;index++;move()});
-  galleryTrack.addEventListener('pointerdown',event=>{dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryTrack.setPointerCapture(event.pointerId);galleryTrack.style.transition='none'});
+  galleryTrack.addEventListener('pointerdown',event=>{dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryTrack.setPointerCapture(event.pointerId);galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
   galleryTrack.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;moved=moved||Math.abs(currentX-startX)>6;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
   galleryTrack.addEventListener('pointerup',()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index+=delta<0?1:-1;move()});
   galleryTrack.addEventListener('pointercancel',()=>{dragging=false;move()});
@@ -150,11 +181,6 @@ if(galleryTrack){
   lightboxFigure?.addEventListener('pointerup',event=>{const delta=event.clientX-lightboxStartX;if(Math.abs(delta)>45)showLightbox(lightboxIndex+(delta<0?1:-1))});
   move(false);
 }
-
-// Sticky mobile offer
-const sticky=$('.sticky-buy'),order=$('#order'),hero=$('.hero');
-function toggleSticky(){if(!sticky||!order||!hero)return;const orderRect=order.getBoundingClientRect();sticky.classList.toggle('show',scrollY>hero.offsetHeight*.68&&!(orderRect.top<innerHeight&&orderRect.bottom>0))}
-addEventListener('scroll',toggleSticky,{passive:true});toggleSticky();
 
 // Mouse-only magnetic CTA
 if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!reduced){$$('.magnetic').forEach(button=>{button.addEventListener('pointermove',event=>{const rect=button.getBoundingClientRect(),x=(event.clientX-rect.left-rect.width/2)*.12,y=(event.clientY-rect.top-rect.height/2)*.18;button.style.transform=`translate(${x}px,${y}px)`});button.addEventListener('pointerleave',()=>button.style.transform='')})}
