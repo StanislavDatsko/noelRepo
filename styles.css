@@ -242,3 +242,118 @@ html,body{max-width:100%;overflow-x:clip}
   .order-duplicate{margin-top:var(--space-7);padding:var(--space-7) 0}.order-duplicate h2{font-size:clamp(36px,10vw,42px)}
   footer{padding:var(--space-5) var(--mobile-pad) calc(var(--space-7) + env(safe-area-inset-bottom))}footer p{font-size:10px}
 }
+
+/* ==========================================================================
+   Spacing system + motion fixes (authoritative, keep last)
+   ========================================================================== */
+:root{--section-y:clamp(72px,9vw,120px);--head-gap:clamp(32px,4.5vw,56px);--content-w:calc(100% - var(--mobile-pad)*2);--dur:.7s}
+
+/* Vertical rhythm: every content section shares one scale */
+.emotion,.records,.photo-essay,.details,.gift,.gallery,.faq{padding-block:var(--section-y);min-height:0}
+.video-story{padding-block:var(--section-y) 0}
+.offer{padding-block:calc(var(--section-y)*1.1);min-height:0}
+.order{padding-block:var(--section-y) calc(var(--section-y) + env(safe-area-inset-bottom))}
+.gift{min-height:0}
+
+/* Heading -> content gap, identical everywhere */
+.record-experience,.video-frame,.immersive-photo,.gallery-viewport,.accordion,.gift-box{margin-top:var(--head-gap)}
+.details-layout{margin-top:var(--head-gap);gap:var(--space-6)}
+.detail-list{margin-top:0}
+.photo-mosaic{margin-top:calc(var(--head-gap)*1.4)}
+.buy-panel,.faq .buy-panel,.details .buy-panel{margin-top:calc(var(--head-gap) + var(--space-5))}
+.emotion-note{margin-top:var(--head-gap)}
+
+/* Intro paragraphs under headings */
+.records-heading>p:last-child,.photo-essay-heading>p:last-child,.gift-copy>p:last-child,.order-copy>p:not(.chapter){margin:var(--space-5) 0 0}
+.product-intro{margin-top:var(--space-4)}
+.order form,.order-duplicate form{margin-top:var(--space-6)}
+.order-price{margin:var(--space-6) 0 var(--space-5)}
+
+/* Media blocks align with the shell gutter instead of ad-hoc offsets */
+.video-frame,.record-experience,.immersive-photo,.gallery-viewport{width:min(var(--content-w),var(--max,900px))}
+.record-experience{--max:760px}.immersive-photo{--max:1080px}.gallery-viewport{--max:720px}
+.gift-message{margin-top:var(--space-5)}
+.gallery-controls{margin-top:var(--space-5)}
+
+/* Duplicate order block inside the video section */
+.order-duplicate{margin-top:calc(var(--head-gap)*1.4);padding-block:var(--head-gap)}
+
+/* Footer */
+footer{padding:var(--space-6) var(--mobile-pad) calc(var(--space-6) + env(safe-area-inset-bottom))}
+
+@media(min-width:700px){
+  .details-layout{padding-inline:var(--mobile-pad)}
+  .order-layout{gap:clamp(48px,8vw,100px)}
+}
+@media(max-width:699px){
+  .details-layout{gap:var(--space-6)}
+  .detail-main{width:min(var(--content-w),620px)}
+  .photo-mosaic{width:var(--content-w);gap:var(--space-3)}
+  .product-mask{width:var(--content-w)}
+  .record-experience{margin-top:var(--head-gap)}
+  .order{padding-bottom:calc(var(--section-y) + env(safe-area-inset-bottom))}
+  .order-duplicate{margin-top:var(--head-gap);padding-block:var(--space-7)}
+  footer{padding-bottom:calc(var(--space-9) + env(safe-area-inset-bottom))} /* room for sticky buy bar */
+}
+
+/* ---------------- Motion ---------------- */
+/* Scroll-linked transforms must never be smoothed by a CSS transition (causes jelly lag) */
+.photo-mosaic img,.immersive-photo,.immersive-photo img,.product-mask,.product-mask img{transition:none}
+.product-story{transition:none}
+
+/* Reveal: shared easing + automatic stagger for sibling groups */
+.reveal{transition:opacity var(--dur) var(--motion),transform var(--dur) var(--motion);will-change:opacity,transform}
+.reveal.visible{will-change:auto}
+.detail-list .reveal:nth-child(2),.photo-mosaic .reveal:nth-child(2){transition-delay:.1s}
+.detail-list .reveal:nth-child(3),.photo-mosaic .reveal:nth-child(3){transition-delay:.2s}
+.detail-list .reveal:nth-child(4){transition-delay:.3s}
+.chapter.reveal,.shell.reveal .chapter{transition-delay:0s}
+
+/* Hero: nested entrance should not fade twice; timer follows the offer block */
+.hero-offer .offer-timer.hero-in{animation:none;opacity:1;transform:none}
+.hero-product.hero-in{opacity:1}
+
+/* Buttons: magnetic uses `translate`, so :active scale and hover never fight inline styles */
+.primary-button{transition:transform .24s var(--motion),translate .35s var(--motion),box-shadow .24s var(--motion),background .24s var(--motion),color .24s var(--motion)}
+.primary-button:active{transform:scale(.97)}
+@media(hover:hover) and (pointer:fine){.primary-button:hover{box-shadow:0 16px 32px #06172552}}
+
+/* Accordion: height is animated from JS (details content can't transition from display:none) */
+.accordion details{display:block;overflow:hidden;padding:0;transition:none}
+.accordion details[open]{padding:0}
+.accordion summary{padding:var(--space-4) 35px var(--space-4) 0}
+.accordion summary:after{top:50%;margin-top:-17px;transition:transform .35s var(--motion)}
+.accordion details[open] summary:after{content:'+';transform:rotate(45deg)}
+.accordion details p{max-height:none;overflow:visible;opacity:1;transform:none;transition:none;margin:0 30px 0 0;padding:0 0 var(--space-4)}
+.accordion details[open] p{max-height:none;padding:0 0 var(--space-4)}
+
+/* Lightbox open/close */
+.photo-lightbox[open]{animation:lbIn .35s var(--motion)}
+.photo-lightbox[open]::backdrop{animation:lbFade .35s ease}
+.photo-lightbox img{animation:lbImg .45s var(--motion)}
+@keyframes lbIn{from{opacity:0}}
+@keyframes lbFade{from{opacity:0}}
+@keyframes lbImg{from{opacity:0;transform:scale(.97)}}
+
+/* Form feedback */
+.form-status:not(:empty){animation:statusIn .4s var(--motion)}
+@keyframes statusIn{from{opacity:0;transform:translateY(6px)}}
+
+/* Ambient life: slow breathing glow + offer rings */
+.hero-aura{animation:breathe 7s ease-in-out infinite}
+.offer-rings{animation:ringPulse 8s ease-in-out infinite}
+@keyframes breathe{50%{opacity:.7;transform:translateX(-50%) scale(1.06)}}
+@keyframes ringPulse{50%{transform:translateY(-50%) scale(1.05);opacity:.7}}
+
+/* Vinyl: smoother selection, touch feedback */
+.vinyl{transition:transform .55s var(--motion),filter .3s ease}
+.vinyl:active{transform:scale(.96)}.vinyl.active:active{transform:translateY(-28px) rotate(14deg) scale(1.04)}
+.record-info h3,.record-info p{transition:opacity .25s ease}
+.record-info.swap h3,.record-info.swap p{opacity:0}
+
+@media(prefers-reduced-motion:reduce){
+  .hero-aura,.offer-rings,.photo-lightbox[open],.photo-lightbox img,.form-status:not(:empty){animation:none}
+  .reveal{will-change:auto}
+  .accordion summary:after,.primary-button{transition:none}
+}
+@media(max-width:699px){.hero-product{width:var(--content-w)}}

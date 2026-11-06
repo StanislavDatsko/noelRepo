@@ -153,7 +153,10 @@ const recordNumber=$('#record-number'),recordTitle=$('#record-title'),recordText
 vinyls.forEach(vinyl=>vinyl.addEventListener('click',()=>{
   vinyls.forEach(item=>{item.classList.remove('active');item.setAttribute('aria-selected','false')});
   vinyl.classList.add('active');vinyl.setAttribute('aria-selected','true');
-  recordNumber.textContent=`Платівка ${vinyl.dataset.number}`;recordTitle.textContent=vinyl.dataset.title;recordText.textContent=vinyl.dataset.text;
+  const info=recordTitle.closest('.record-info');
+  const apply=()=>{recordNumber.textContent=`Платівка ${vinyl.dataset.number}`;recordTitle.textContent=vinyl.dataset.title;recordText.textContent=vinyl.dataset.text;info?.classList.remove('swap')};
+  if(reduced||!info){apply();return}
+  info.classList.add('swap');clearTimeout(info._t);info._t=setTimeout(apply,180);
 }));
 
 // Decorative gift opening
@@ -174,16 +177,18 @@ if(galleryTrack){
   const counter=$('[data-gallery-current]');
   const totalLabel=$('[data-gallery-total]');if(totalLabel)totalLabel.textContent=String(total).padStart(2,'0');
   function updateCounter(){counter.textContent=String(index===0?total:index===total+1?1:index).padStart(2,'0')}
-  function move(animate=true){galleryTrack.style.willChange=animate?'transform':'auto';galleryTrack.style.transition=animate?'transform .65s var(--ease)':'none';galleryTrack.style.transform=`translate3d(-${index*100}%,0,0)`;updateCounter()}
-  function normalize(){if(index===0){index=total;move(false)}else if(index===total+1){index=1;move(false)}galleryTrack.style.willChange='auto'}
-  galleryTrack.addEventListener('transitionend',normalize);
+  function move(animate=true){animate=animate&&!reduced;galleryTrack.style.willChange=animate?'transform':'auto';galleryTrack.style.transition=animate?'transform .65s var(--ease)':'none';galleryTrack.style.transform=`translate3d(-${index*100}%,0,0)`;updateCounter();if(!animate)normalizeSoon()}
+  let normalizing=false;function normalizeSoon(){if(index!==0&&index!==total+1)return;if(normalizing)return;normalizing=true;requestAnimationFrame(()=>{normalizing=false;normalize()})}
+  function normalize(){if(index===0){index=total;move(false)}else if(index===total+1){index=1;move(false)}void galleryTrack.offsetWidth;galleryTrack.style.willChange='auto'}
+  galleryTrack.addEventListener('transitionend',event=>{if(event.target===galleryTrack&&event.propertyName==='transform')normalize()});
   $('[data-gallery-prev]')?.addEventListener('click',()=>{if(index<=0)return;index--;move()});
   $('[data-gallery-next]')?.addEventListener('click',()=>{if(index>=total+1)return;index++;move()});
-  const finishDrag=()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index+=delta<0?1:-1;move()};
-  galleryViewport?.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryViewport.setPointerCapture?.(event.pointerId);galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
-  galleryViewport?.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;moved=moved||Math.abs(currentX-startX)>6;galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
+  const finishDrag=()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index=Math.min(total+1,Math.max(0,index+(delta<0?1:-1)));move()};
+  galleryViewport?.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryViewport._pid=event.pointerId;galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
+  galleryViewport?.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;if(!moved&&Math.abs(currentX-startX)>6){moved=true;galleryViewport.setPointerCapture?.(event.pointerId)}galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
   galleryViewport?.addEventListener('pointerup',finishDrag);
   galleryViewport?.addEventListener('pointercancel',()=>{dragging=false;move()});
+  galleryViewport?.addEventListener('lostpointercapture',()=>{if(dragging)finishDrag()});
   const lightbox=$('.photo-lightbox'),lightboxImage=$('.photo-lightbox img'),lightboxCaption=$('.photo-lightbox figcaption');
   let lightboxIndex=0;
   function showLightbox(nextIndex){
@@ -207,7 +212,7 @@ if(galleryTrack){
 }
 
 // Mouse-only magnetic CTA
-if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!reduced){$$('.magnetic').forEach(button=>{button.addEventListener('pointermove',event=>{const rect=button.getBoundingClientRect(),x=(event.clientX-rect.left-rect.width/2)*.12,y=(event.clientY-rect.top-rect.height/2)*.18;button.style.transform=`translate(${x}px,${y}px)`});button.addEventListener('pointerleave',()=>button.style.transform='')})}
+if(matchMedia('(hover:hover) and (pointer:fine)').matches&&!reduced){$$('.magnetic').forEach(button=>{button.addEventListener('pointermove',event=>{const rect=button.getBoundingClientRect(),x=(event.clientX-rect.left-rect.width/2)*.12,y=(event.clientY-rect.top-rect.height/2)*.18;button.style.translate=`${x}px ${y}px`});button.addEventListener('pointerleave',()=>button.style.translate='')})}
 
 // Order form and traffic attribution
 $$('input[name=phone]').forEach(phone=>phone.addEventListener('input',event=>{let value=event.target.value.replace(/\D/g,'');if(value.startsWith('380'))value=value.slice(0,12);else if(value.startsWith('0'))value=`38${value.slice(0,10)}`;else value=`380${value.slice(0,9)}`;event.target.value=`+${value}`}));
@@ -219,3 +224,22 @@ $$('.order-form').forEach(orderForm=>orderForm.addEventListener('submit',async e
   try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';button.innerHTML='Заявку прийнято <span>✓</span>';form.reset();window.dataLayer?.push({event:'Lead'})}
   catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>→</span>'}
 }));
+
+// Smooth accordion: animate the <details> height with the Web Animations API
+$$('.accordion details').forEach(details=>{
+  const summary=$('summary',details);let anim=null;
+  summary.addEventListener('click',event=>{
+    event.preventDefault();
+    if(anim){anim.cancel();anim=null}
+    const opening=!details.open,start=details.offsetHeight;
+    if(opening){
+      details.open=true;
+    }
+    const end=opening?details.scrollHeight:summary.offsetHeight;
+    if(reduced){if(!opening)details.open=false;return}
+    details.style.overflow='hidden';
+    anim=details.animate({height:[`${start}px`,`${end}px`]},{duration:opening?450:350,easing:'cubic-bezier(.22,.7,0,1)'});
+    const done=()=>{anim=null;details.style.overflow='';if(!opening)details.open=false};
+    anim.onfinish=done;anim.oncancel=()=>{anim=null};
+  });
+});
