@@ -357,3 +357,78 @@ footer{padding:var(--space-6) var(--mobile-pad) calc(var(--space-6) + env(safe-a
   .accordion summary:after,.primary-button{transition:none}
 }
 @media(max-width:699px){.hero-product{width:var(--content-w)}}
+
+/* ==========================================================================
+   Round 2: arrows, prices, headings, video, story, gallery, form gap
+   ========================================================================== */
+
+/* Arrow icon is drawn with CSS, so it is always perfectly centred (no font baseline drift) */
+html .primary-button span:not(.done),html .primary-button i{display:block;position:relative;flex:0 0 26px;width:26px;height:26px;font-size:0;line-height:0;border:1px solid currentColor;border-radius:50%}
+html .primary-button span:not(.done)::before,html .primary-button i::before{content:'';position:absolute;left:50%;top:50%;width:10px;height:1.5px;background:currentColor;transform:translate(-50%,-50%)}
+html .primary-button span:not(.done)::after,html .primary-button i::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;border-top:1.5px solid currentColor;border-right:1.5px solid currentColor;transform:translate(calc(-50% + 1.5px),-50%) rotate(45deg)}
+html .primary-button span.done{display:grid;place-items:center;width:26px;height:26px;font:700 14px/1 var(--sans);border:1px solid currentColor;border-radius:50%}
+.primary-button{white-space:nowrap}
+@media(max-width:699px){
+  .primary-button{gap:var(--space-3);padding-inline:var(--space-4)}
+  .hero-offer .primary-button,.buy-panel .primary-button,.order form .primary-button{font-size:clamp(10px,3vw,12px);letter-spacing:.06em}
+  html .hero-offer .primary-button span{width:24px;height:24px;flex-basis:24px}
+}
+
+/* Prices: old price always readable and never squeezed */
+.hero-price{grid-template-columns:minmax(0,1fr) auto;align-items:center}
+.hero-price small{white-space:nowrap}
+.hero-price del,.hero-price del{white-space:nowrap;font-size:15px}
+.buy-panel-price del,.order-price del,.sticky-buy del{font-size:15px;white-space:nowrap}
+.offer-price>span{font-size:15px;letter-spacing:.06em}
+.offer-price>span del,.offer-price>span del{font-size:20px;font-weight:800;letter-spacing:0}
+.order-price del{font-size:17px}
+@media(max-width:699px){
+  .hero-price del{font-size:15px}
+  .sticky-buy del{font-size:12px}
+  .offer-price>span,.offer-price>span del{font-size:15px}
+  .offer-price>span del{font-size:20px}
+  .buy-panel-price del,.order-price del{font-size:15px}
+}
+
+/* Headings: balanced wrapping, sizes that fit one phrase per line */
+h2,h3{text-wrap:balance}
+@media(max-width:699px){
+  main section[class] h2{font-size:clamp(30px,9.2vw,46px);line-height:1}
+  main section.emotion h2{font-size:clamp(25px,7.1vw,34px);line-height:1.08}
+  main section.emotion h2 em{white-space:nowrap}
+}
+
+/* Video: native 9:16, never cropped */
+.video-frame{--max:420px;background:#020b12}
+.video-frame video{aspect-ratio:9/16;max-height:82svh;width:100%;margin-inline:auto;object-fit:contain;background:#020b12}
+@media(min-width:700px){.video-frame video{aspect-ratio:9/16}}
+
+/* Product story: bigger scroll runway, fully visible photo, facts only after photo */
+.product-story{height:230vh}
+.product-mask{width:auto;max-width:var(--content-w);height:min(var(--content-w),38svh);aspect-ratio:1/1;margin-inline:auto;clip-path:none;border-radius:10px}
+@media(min-width:700px){.product-mask{height:min(50svh,540px);max-width:min(var(--content-w),720px)}}
+.product-facts{will-change:opacity}
+
+/* Mosaic / details layout fixes */
+.photo-mosaic{grid-template-columns:minmax(0,.92fr) minmax(0,1.08fr)}
+@media(min-width:700px){.photo-mosaic{grid-template-columns:minmax(0,.88fr) minmax(0,1.12fr)}}
+.photo-mosaic figure{min-width:0}
+.details-layout{align-items:start}
+.detail-main img{aspect-ratio:1/1;height:auto}
+
+/* Gift: reliable tap, no double-tap zoom delay */
+.gift-box{touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+
+/* Gallery: horizontal swipe handled in JS, vertical scroll stays native */
+.gallery-viewport,.gallery-track{touch-action:pan-y pinch-zoom}
+
+/* Snow canvas follows the large viewport so the mobile URL bar never resizes it */
+.snow-canvas{height:100%;height:100lvh}
+
+/* Order: tighter bottom, status line only takes room when used */
+.order{padding-bottom:calc(var(--space-8) + env(safe-area-inset-bottom))}
+.form-status{min-height:0;margin-top:var(--space-3)}
+.form-status:empty{margin:0}
+.form-note{margin-bottom:0}
+.order-after-story{margin-top:0;padding-block:var(--section-y);background:linear-gradient(180deg,#071827,#102f4c)}
+@media(max-width:699px){.order-after-story{margin-top:0;padding-block:var(--space-8)}}

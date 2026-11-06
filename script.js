@@ -32,7 +32,8 @@ const clamp=value=>Math.min(1,Math.max(0,value));
 const ease=value=>{const t=clamp(value);return t*t*(3-2*t)};
 const phase=(value,start,end)=>ease((value-start)/(end-start));
 const layout={maxScroll:1,headlineStart:0,storyEnd:1,immersiveTop:0,immersiveHeight:0,heroHeight:0,orderTop:0,orderBottom:0};
-let ticking=false,measureTicking=false;
+let ticking=false,measureTicking=false,storyCur=null,storySmoothing=false;
+const productFacts=$('.product-facts');
 function measureLayout(){
   layout.maxScroll=Math.max(1,document.documentElement.scrollHeight-innerHeight);
   if(productSection){const top=productSection.getBoundingClientRect().top+scrollY,travel=Math.max(1,productSection.offsetHeight-innerHeight);layout.headlineStart=top+(storyCopy?.offsetTop||64)-innerHeight*.7;layout.storyEnd=top+travel}
@@ -52,20 +53,25 @@ function renderScroll(){
       [storyChapter,storyLineOne,storyLineTwo,productIntro,productMask,productImage].forEach(element=>{element?.style.removeProperty('opacity');element?.style.removeProperty('transform');element?.style.removeProperty('filter');element?.style.removeProperty('clip-path')});
       productSection.style.setProperty('--story-light','.55');
       storyFacts.forEach(fact=>fact.classList.add('active'));
+      productFacts?.style.removeProperty('opacity');productFacts?.style.removeProperty('transform');
     }else{
-    const value=clamp((y-layout.headlineStart)/Math.max(1,layout.storyEnd-layout.headlineStart));
+    const target=clamp((y-layout.headlineStart)/Math.max(1,layout.storyEnd-layout.headlineStart));
+    if(storyCur===null)storyCur=target;
+    storyCur+=(target-storyCur)*.16;
+    if(Math.abs(target-storyCur)>.0004){if(!storySmoothing){storySmoothing=true;requestAnimationFrame(()=>{storySmoothing=false;renderScroll()})}}else storyCur=target;
+    const value=storyCur;
     const intro=phase(value,0,.26),accent=phase(value,.12,.42),photo=phase(value,.38,.7),description=phase(value,.7,.86),outro=phase(value,.9,1);
     if(storyChapter){storyChapter.style.opacity=String(intro);storyChapter.style.transform=`translate3d(0,${(1-intro)*16}px,0)`}
     if(storyLineOne){storyLineOne.style.opacity=String(intro);storyLineOne.style.transform=`translate3d(0,${(1-intro)*108}%,0)`}
     if(storyLineTwo){storyLineTwo.style.opacity=String(accent);storyLineTwo.style.transform=`translate3d(0,${(1-accent)*108}%,0) scale(${.94+accent*.06})`}
     if(productIntro){productIntro.style.opacity=String(description);productIntro.style.transform=`translate3d(0,${(1-description)*20}px,0)`}
-    productMask.style.clipPath='inset(0 round 10px)';
     productMask.style.opacity=String(photo);
     productMask.style.transform=`translate3d(0,${(1-photo)*14-outro*6}px,0)`;
     productSection.style.setProperty('--story-light',String(photo*(1-outro*.35)));
     productImage.style.transform='scale(1.01)';
     if(productShade)productShade.style.opacity=String(.48-photo*.26);
-    const factsProgress=phase(value,.76,.98);
+    const factsProgress=phase(value,.78,.98);
+    if(productFacts){const show=phase(value,.72,.84);productFacts.style.opacity=String(show);productFacts.style.transform=`translate3d(0,${(1-show)*14}px,0)`}
     const active=factsProgress<.08?-1:Math.min(2,Math.floor(factsProgress*3));
     storyFacts.forEach((fact,index)=>fact.classList.toggle('active',index===active));
     }
@@ -120,15 +126,15 @@ if(!reduced){
     const flakeCount=()=>isMobile()?12:20;
     const crystalPath=new Path2D();
     for(let arm=0;arm<6;arm++){const angle=arm*Math.PI/3,x=Math.cos(angle),y=Math.sin(angle);crystalPath.moveTo(0,0);crystalPath.lineTo(x*1.45,y*1.45);for(const side of [-1,1]){const branch=angle+side*.58;crystalPath.moveTo(x*.86,y*.86);crystalPath.lineTo(x*.86+Math.cos(branch)*.36,y*.86+Math.sin(branch)*.36)}}
-    function resetFlake(f,initial=false){const depth=.45+Math.random()*.65;f.x=Math.random()*width;f.y=initial?Math.random()*height:-18;f.size=(1.8+Math.random()*3.6)*depth;f.speed=(18+Math.random()*28)*depth;f.wind=(Math.random()-.5)*6;f.phase=Math.random()*Math.PI*2;f.angle=Math.random()*Math.PI;f.spin=(Math.random()-.35)*.35;f.alpha=(.3+Math.random()*.38)*depth;f.crystal=Math.random()>.9;return f}
-    function setupSnow(){width=innerWidth;height=innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.25);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);canvas.style.width=`${width}px`;canvas.style.height=`${height}px`;ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>resetFlake({},true));drawSnow(0)}
-    function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.size,f.size);ctx.globalAlpha=f.alpha;ctx.lineWidth=.48/f.size;ctx.stroke(crystalPath);ctx.restore()}
-    function drawSnow(delta){ctx.clearRect(0,0,width,height);ctx.fillStyle='#f7fbff';ctx.strokeStyle='#f7fbff';for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)resetFlake(f);if(f.crystal)drawCrystal(f);else{ctx.globalAlpha=f.alpha;const size=Math.max(1,f.size*.55);ctx.fillRect(f.x,f.y,size,size)}}ctx.globalAlpha=1}
+    function resetFlake(f,initial=false){const depth=.55+Math.random()*.7;f.x=Math.random()*width;f.y=initial?Math.random()*height:-24;f.size=(2.4+Math.random()*4.2)*depth;f.speed=(18+Math.random()*28)*depth;f.wind=(Math.random()-.5)*6;f.phase=Math.random()*Math.PI*2;f.angle=Math.random()*Math.PI;f.spin=(Math.random()-.35)*.35;f.alpha=(.3+Math.random()*.38)*depth;f.crystal=Math.random()>.8;return f}
+    function setupSnow(){width=innerWidth;height=Math.round(canvas.getBoundingClientRect().height)||innerHeight;dpr=Math.min(devicePixelRatio||1,isMobile()?1:1.25);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);flakes=Array.from({length:flakeCount()},()=>resetFlake({},true));drawSnow(0)}
+    function drawCrystal(f){ctx.save();ctx.translate(f.x,f.y);ctx.rotate(f.angle);ctx.scale(f.size*1.5,f.size*1.5);ctx.globalAlpha=f.alpha+.12;ctx.lineWidth=.42/(f.size*1.5);ctx.stroke(crystalPath);ctx.restore()}
+    function drawSnow(delta){ctx.clearRect(0,0,width,height);ctx.fillStyle='#f7fbff';ctx.strokeStyle='#f7fbff';for(const f of flakes){f.y+=f.speed*delta;f.x+=(f.wind+Math.sin(f.phase+f.y*.012)*5)*delta;f.angle+=f.spin*delta;if(f.y>height+14||f.x<-18||f.x>width+18)resetFlake(f);if(f.crystal)drawCrystal(f);else{ctx.globalAlpha=f.alpha;ctx.beginPath();ctx.arc(f.x,f.y,Math.max(1.3,f.size*.62),0,6.2832);ctx.fill()}}ctx.globalAlpha=1}
     function animateSnow(time){if(!running)return;frame=requestAnimationFrame(animateSnow);const delta=Math.min(.03,(time-lastPaint||16)/1000);lastPaint=time;drawSnow(delta)}
     function startSnow(){if(running||document.hidden)return;running=true;lastPaint=performance.now()-16;frame=requestAnimationFrame(animateSnow)}
     function stopSnow(){running=false;cancelAnimationFrame(frame)}
     setupSnow();afterFirstPaint(startSnow);
-    addEventListener('resize',()=>{cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(setupSnow)},{passive:true});
+    let snowWidth=innerWidth;addEventListener('resize',()=>{if(innerWidth===snowWidth)return;snowWidth=innerWidth;cancelAnimationFrame(resizeFrame);resizeFrame=requestAnimationFrame(setupSnow)},{passive:true});
     addEventListener('pageshow',startSnow,{passive:true});
     addEventListener('pagehide',stopSnow,{passive:true});
     document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSnow();else startSnow()});
@@ -162,9 +168,7 @@ vinyls.forEach(vinyl=>vinyl.addEventListener('click',()=>{
 // Decorative gift opening
 const giftBox=$('.gift-box'),giftMessage=$('.gift-message');
 const toggleGift=()=>{if(!giftBox)return;const open=giftBox.classList.toggle('open');giftBox.setAttribute('aria-expanded',String(open));giftMessage.classList.toggle('visible',open);$('small',giftBox).textContent=open?'Ваш особливий момент':'Натисніть, щоб відкрити'};
-let giftPointerHandled=false;
-giftBox?.addEventListener('pointerup',event=>{if(event.pointerType==='mouse')return;event.preventDefault();giftPointerHandled=true;toggleGift();setTimeout(()=>{giftPointerHandled=false},0)});
-giftBox?.addEventListener('click',event=>{if(giftPointerHandled)return;if(event.detail===0||event.pointerType==='mouse'||event.detail>0)toggleGift()});
+giftBox?.addEventListener('click',toggleGift);
 
 // Infinite one-slide gallery with buttons and touch gestures
 const galleryTrack=$('.gallery-track');
@@ -185,10 +189,9 @@ if(galleryTrack){
   $('[data-gallery-next]')?.addEventListener('click',()=>{if(index>=total+1)return;index++;move()});
   const finishDrag=()=>{if(!dragging)return;dragging=false;const delta=currentX-startX;if(Math.abs(delta)>45)index=Math.min(total+1,Math.max(0,index+(delta<0?1:-1)));move()};
   galleryViewport?.addEventListener('pointerdown',event=>{if(event.pointerType==='mouse'&&event.button!==0)return;dragging=true;moved=false;startX=event.clientX;currentX=startX;galleryViewport._pid=event.pointerId;galleryTrack.style.willChange='transform';galleryTrack.style.transition='none'});
-  galleryViewport?.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;if(!moved&&Math.abs(currentX-startX)>6){moved=true;galleryViewport.setPointerCapture?.(event.pointerId)}galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
+  galleryViewport?.addEventListener('pointermove',event=>{if(!dragging)return;currentX=event.clientX;if(!moved&&Math.abs(currentX-startX)>6){moved=true;if(event.pointerType==='mouse')galleryViewport.setPointerCapture?.(event.pointerId)}galleryTrack.style.transform=`translate3d(calc(-${index*100}% + ${currentX-startX}px),0,0)`});
   galleryViewport?.addEventListener('pointerup',finishDrag);
   galleryViewport?.addEventListener('pointercancel',()=>{dragging=false;move()});
-  galleryViewport?.addEventListener('lostpointercapture',()=>{if(dragging)finishDrag()});
   const lightbox=$('.photo-lightbox'),lightboxImage=$('.photo-lightbox img'),lightboxCaption=$('.photo-lightbox figcaption');
   let lightboxIndex=0;
   function showLightbox(nextIndex){
@@ -221,7 +224,7 @@ $$('.order-form').forEach(orderForm=>orderForm.addEventListener('submit',async e
   event.preventDefault();const form=event.currentTarget,button=$('button[type=submit]',form),status=$('.form-status',form),data=Object.fromEntries(new FormData(form));
   if(data.name.trim().length<2||!/^\+380\d{9}$/.test(data.phone)||!data.consent){status.textContent='Перевірте ім’я, номер у форматі +380 та згоду на обробку даних.';status.className='form-status error';return}
   button.disabled=true;button.innerHTML='Надсилаємо…';status.textContent='';status.className='form-status';Object.assign(data,{product:window.STORE_CONFIG?.product||'Різдвяний магнітний мініпрогравач',price:window.STORE_CONFIG?.currencyPrice||'1422.98',traffic:trafficData()});
-  try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';button.innerHTML='Заявку прийнято <span>✓</span>';form.reset();window.dataLayer?.push({event:'Lead'})}
+  try{const response=await fetch('/api/order',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}),result=await response.json().catch(()=>({}));if(!response.ok)throw Error(result.error);status.textContent='Дякуємо! Ваша заявка прийнята — незабаром ми зателефонуємо.';status.className='form-status success';button.innerHTML='Заявку прийнято <span class="done">✓</span>';form.reset();window.dataLayer?.push({event:'Lead'})}
   catch{status.textContent='Не вдалося надіслати заявку. Перевірте з’єднання або спробуйте ще раз.';status.className='form-status error';button.disabled=false;button.innerHTML='Отримати зі знижкою <span>→</span>'}
 }));
 
